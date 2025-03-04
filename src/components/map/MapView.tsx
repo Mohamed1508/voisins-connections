@@ -1,9 +1,28 @@
+
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { MapPin, Locate, Search, ZoomIn, ZoomOut } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { MapContainer, TileLayer, Marker, Circle, Popup, useMap } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import { useLanguage } from "@/context/LanguageContext";
+import L from "leaflet";
+
+// Fix for default icon issues in Leaflet with webpack
+import icon from "leaflet/dist/images/marker-icon.png";
+import iconShadow from "leaflet/dist/images/marker-shadow.png";
+
+// Fix Leaflet default icon issue
+let DefaultIcon = L.icon({
+  iconUrl: icon,
+  shadowUrl: iconShadow,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+});
+
+L.Marker.prototype.options.icon = DefaultIcon;
 
 interface MapViewProps {
   className?: string;
@@ -25,23 +44,54 @@ const neighbors = [
   { id: 5, name: "Julie M.", lat: 48.8536, lng: 2.3482, distance: 0.7 },
 ];
 
+// Composant pour contrôler la carte
+const MapController = ({ center, zoom }: { center: [number, number], zoom: number }) => {
+  const map = useMap();
+  
+  useEffect(() => {
+    map.setView(center, zoom);
+  }, [center, zoom, map]);
+  
+  return null;
+};
+
+// Composant pour rechercher un pays
+const CountrySearch = ({ onSearch }: { onSearch: (country: string) => void }) => {
+  const [query, setQuery] = useState("");
+  const { translations } = useLanguage();
+  
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (query.trim()) {
+      onSearch(query);
+    }
+  };
+  
+  return (
+    <form onSubmit={handleSubmit} className="relative w-full">
+      <Search className="absolute left-2 top-2 h-4 w-4 text-muted-foreground" />
+      <input
+        type="text"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder={translations.searchAddress}
+        className="pl-8 pr-4 py-1 w-full rounded-md text-sm border border-border bg-background"
+      />
+    </form>
+  );
+};
+
 const MapView = ({ className = "", previewMode = false }: MapViewProps) => {
-  const mapRef = useRef<HTMLDivElement>(null);
   const [radius, setRadius] = useState(1);
-  const [isMapLoaded, setIsMapLoaded] = useState(false);
+  const [mapCenter, setMapCenter] = useState<[number, number]>([userLocation.lat, userLocation.lng]);
+  const [zoom, setZoom] = useState(13);
   const [selectedNeighbor, setSelectedNeighbor] = useState<typeof neighbors[0] | null>(null);
   const { toast } = useToast();
-
-  useEffect(() => {
-    // Simulation d'une carte qui charge
-    const timer = setTimeout(() => {
-      setIsMapLoaded(true);
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, []);
+  const { translations } = useLanguage();
 
   const handleLocate = () => {
+    setMapCenter([userLocation.lat, userLocation.lng]);
+    setZoom(13);
     toast({
       title: "Localisation activée",
       description: "Votre position a été mise à jour.",
@@ -49,95 +99,99 @@ const MapView = ({ className = "", previewMode = false }: MapViewProps) => {
   };
 
   const handleZoomIn = () => {
-    // Simulation de zoom in
+    setZoom((prev) => Math.min(prev + 1, 18));
   };
 
   const handleZoomOut = () => {
-    // Simulation de zoom out
+    setZoom((prev) => Math.max(prev - 1, 3));
   };
 
   const handleNeighborClick = (neighbor: typeof neighbors[0]) => {
     setSelectedNeighbor(neighbor);
   };
 
+  const handleCountrySearch = async (countryName: string) => {
+    try {
+      // Utiliser l'API nominatim de OpenStreetMap pour geocoder le pays
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?country=${encodeURIComponent(
+          countryName
+        )}&format=json&limit=1`
+      );
+      const data = await response.json();
+      
+      if (data && data.length > 0) {
+        const { lat, lon } = data[0];
+        setMapCenter([parseFloat(lat), parseFloat(lon)]);
+        setZoom(6); // Zoom approprié pour un pays
+        toast({
+          title: "Pays trouvé",
+          description: `Affichage de: ${countryName}`,
+        });
+      } else {
+        toast({
+          title: "Pays non trouvé",
+          description: "Essayez un autre nom de pays",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de rechercher le pays",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className={`relative w-full rounded-xl overflow-hidden ${className}`}>
-      {/* Map container */}
-      <div 
-        ref={mapRef} 
-        className={`w-full h-full min-h-[300px] bg-gray-200 transition-opacity duration-500 ${isMapLoaded ? 'opacity-100' : 'opacity-40'}`}
-      >
-        {/* Placeholder pour simuler la carte */}
-        {!isMapLoaded && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-          </div>
-        )}
-        
-        {isMapLoaded && (
-          <>
-            {/* Simuler un fond de carte avec un dégradé */}
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-blue-100"></div>
-            
-            {/* Simuler des routes */}
-            <div className="absolute inset-0">
-              <div className="absolute left-1/4 top-1/2 w-1/2 h-0.5 bg-gray-300 transform -rotate-45"></div>
-              <div className="absolute left-1/4 top-1/3 w-1/2 h-0.5 bg-gray-300"></div>
-              <div className="absolute left-1/2 top-1/4 w-0.5 h-1/2 bg-gray-300"></div>
-              <div className="absolute left-1/3 top-1/4 w-1/3 h-0.5 bg-gray-300 transform rotate-45"></div>
-            </div>
-            
-            {/* Point de l'utilisateur */}
-            <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2">
-              <div className="relative">
-                <div className="absolute -inset-4 rounded-full bg-primary/20 animate-pulse-slow"></div>
-                <div className="absolute -inset-2 rounded-full bg-primary/30"></div>
-                <div className="w-4 h-4 bg-primary rounded-full border-2 border-white shadow-lg"></div>
-              </div>
-            </div>
-            
-            {/* Cercle de rayon */}
-            <div 
-              className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 rounded-full border border-primary/40 bg-primary/5"
-              style={{ 
-                width: `${radius * 40}%`, 
-                height: `${radius * 40}%`,
-                transition: 'all 0.3s ease-out'
+      {/* Carte Leaflet */}
+      <div className="w-full h-full min-h-[300px]">
+        <MapContainer
+          center={mapCenter}
+          zoom={zoom}
+          style={{ height: "100%", width: "100%", borderRadius: "0.75rem" }}
+        >
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+          
+          <MapController center={mapCenter} zoom={zoom} />
+          
+          {/* Position de l'utilisateur */}
+          <Marker position={[userLocation.lat, userLocation.lng]}>
+            <Popup>Votre position</Popup>
+          </Marker>
+          
+          {/* Cercle de rayon */}
+          <Circle 
+            center={[userLocation.lat, userLocation.lng]} 
+            radius={radius * 1000}
+            pathOptions={{ fillColor: 'blue', fillOpacity: 0.1, color: 'blue', weight: 1 }}
+          />
+          
+          {/* Marqueurs des voisins */}
+          {neighbors.map((neighbor) => (
+            <Marker 
+              key={neighbor.id}
+              position={[neighbor.lat, neighbor.lng]}
+              eventHandlers={{
+                click: () => handleNeighborClick(neighbor),
               }}
-            ></div>
-            
-            {/* Points des voisins */}
-            {neighbors.map((neighbor) => (
-              <div 
-                key={neighbor.id}
-                className={`absolute cursor-pointer transition-all duration-300 transform ${
-                  selectedNeighbor?.id === neighbor.id ? 'scale-125' : 'scale-100'
-                }`}
-                style={{ 
-                  left: `calc(50% + ${(neighbor.lng - userLocation.lng) * 100}px)`, 
-                  top: `calc(50% + ${(neighbor.lat - userLocation.lat) * -100}px)`,
-                }}
-                onClick={() => handleNeighborClick(neighbor)}
-              >
-                <div className="w-3 h-3 bg-accent-foreground rounded-full border border-background shadow-md"></div>
-              </div>
-            ))}
-          </>
-        )}
+            >
+              <Popup>{neighbor.name}</Popup>
+            </Marker>
+          ))}
+        </MapContainer>
       </div>
       
       {/* Controls */}
       <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
         <Card className="w-1/2 shadow-lg bg-background/90 backdrop-blur-sm">
           <CardContent className="p-2">
-            <div className="relative">
-              <Search className="absolute left-2 top-2 h-4 w-4 text-muted-foreground" />
-              <input
-                type="text"
-                placeholder="Rechercher une adresse..."
-                className="pl-8 pr-4 py-1 w-full rounded-md text-sm border border-border bg-background"
-              />
-            </div>
+            <CountrySearch onSearch={handleCountrySearch} />
           </CardContent>
         </Card>
         
@@ -160,7 +214,7 @@ const MapView = ({ className = "", previewMode = false }: MapViewProps) => {
           <CardContent className="p-4">
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Rayon de recherche</span>
+                <span className="text-sm font-medium">{translations.searchRadius}</span>
                 <span className="text-sm font-medium">{radius} km</span>
               </div>
               <Slider
