@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { MapPin, Locate, Search, ZoomIn, ZoomOut } from "lucide-react";
+import { MapPin, Locate, Search, ZoomIn, ZoomOut, Calendar } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { MapContainer, TileLayer, Marker, Circle, Popup, useMap } from "react-leaflet";
@@ -37,11 +37,18 @@ const userLocation = {
 
 // Simuler les voisins
 const neighbors = [
-  { id: 1, name: "Marie D.", lat: 48.8576, lng: 2.3532, distance: 0.2 },
-  { id: 2, name: "Thomas L.", lat: 48.8580, lng: 2.3492, distance: 0.3 },
-  { id: 3, name: "Sarah K.", lat: 48.8546, lng: 2.3502, distance: 0.4 },
-  { id: 4, name: "Ahmed B.", lat: 48.8596, lng: 2.3572, distance: 0.5 },
-  { id: 5, name: "Julie M.", lat: 48.8536, lng: 2.3482, distance: 0.7 },
+  { id: 1, name: "Marie D.", lat: 48.8576, lng: 2.3532, distance: 0.2, country: { code: "FR", name: "France" } },
+  { id: 2, name: "Thomas L.", lat: 48.8580, lng: 2.3492, distance: 0.3, country: { code: "FR", name: "France" } },
+  { id: 3, name: "Sarah K.", lat: 48.8546, lng: 2.3502, distance: 0.4, country: { code: "TN", name: "Tunisie" } },
+  { id: 4, name: "Ahmed B.", lat: 48.8596, lng: 2.3572, distance: 0.5, country: { code: "MA", name: "Maroc" } },
+  { id: 5, name: "Julie M.", lat: 48.8536, lng: 2.3482, distance: 0.7, country: { code: "FR", name: "France" } },
+  { id: 6, name: "Karim Mensour", lat: 48.8536, lng: 2.3462, distance: 0.9, country: { code: "DZ", name: "Algérie" } },
+];
+
+// Simuler des événements communautaires
+const events = [
+  { id: 1, name: "Café entre voisins", date: "2023-07-15", time: "10:00", lat: 48.8560, lng: 2.3510, createdBy: "Marie D." },
+  { id: 2, name: "Vide-grenier", date: "2023-07-20", time: "14:00", lat: 48.8590, lng: 2.3530, createdBy: "Thomas L." },
 ];
 
 // Composant pour contrôler la carte
@@ -81,11 +88,25 @@ const CountrySearch = ({ onSearch }: { onSearch: (country: string) => void }) =>
   );
 };
 
+// Define custom marker icons for events
+const eventIcon = new L.Icon({
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
+
 const MapView = ({ className = "", previewMode = false }: MapViewProps) => {
   const [radius, setRadius] = useState(1);
   const [mapCenter, setMapCenter] = useState<[number, number]>([userLocation.lat, userLocation.lng]);
   const [zoom, setZoom] = useState(13);
   const [selectedNeighbor, setSelectedNeighbor] = useState<typeof neighbors[0] | null>(null);
+  const [countryFilter, setCountryFilter] = useState<string | null>(null);
+  const [showEvents, setShowEvents] = useState(true);
+  const [showEventForm, setShowEventForm] = useState(false);
+  const [newEvent, setNewEvent] = useState({ name: "", date: "", time: "", lat: 0, lng: 0 });
   const { toast } = useToast();
   const { translations } = useLanguage();
 
@@ -144,14 +165,39 @@ const MapView = ({ className = "", previewMode = false }: MapViewProps) => {
     }
   };
 
+  const handleAddEvent = () => {
+    setNewEvent({
+      ...newEvent,
+      lat: userLocation.lat,
+      lng: userLocation.lng
+    });
+    setShowEventForm(true);
+  };
+
+  const handleSubmitEvent = (e: React.FormEvent) => {
+    e.preventDefault();
+    toast({
+      title: "Événement créé",
+      description: `Votre événement "${newEvent.name}" a été ajouté à la carte.`,
+    });
+    // Here we would normally save to Supabase
+    setShowEventForm(false);
+    setNewEvent({ name: "", date: "", time: "", lat: 0, lng: 0 });
+  };
+
+  // Filter neighbors by country if filter is active
+  const filteredNeighbors = countryFilter 
+    ? neighbors.filter(n => n.country.code === countryFilter)
+    : neighbors;
+
   return (
     <div className={`relative w-full rounded-xl overflow-hidden ${className}`}>
       {/* Carte Leaflet */}
       <div className="w-full h-full min-h-[300px]">
-        <MapContainer
-          center={mapCenter}
-          zoom={zoom}
+        <MapContainer 
           style={{ height: "100%", width: "100%", borderRadius: "0.75rem" }}
+          center={[mapCenter[0], mapCenter[1]]}
+          zoom={zoom}
         >
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -168,12 +214,12 @@ const MapView = ({ className = "", previewMode = false }: MapViewProps) => {
           {/* Cercle de rayon */}
           <Circle 
             center={[userLocation.lat, userLocation.lng]} 
-            radius={radius * 1000}
             pathOptions={{ fillColor: 'blue', fillOpacity: 0.1, color: 'blue', weight: 1 }}
+            radius={radius * 1000}
           />
           
           {/* Marqueurs des voisins */}
-          {neighbors.map((neighbor) => (
+          {filteredNeighbors.map((neighbor) => (
             <Marker 
               key={neighbor.id}
               position={[neighbor.lat, neighbor.lng]}
@@ -181,7 +227,38 @@ const MapView = ({ className = "", previewMode = false }: MapViewProps) => {
                 click: () => handleNeighborClick(neighbor),
               }}
             >
-              <Popup>{neighbor.name}</Popup>
+              <Popup>
+                <div className="p-1">
+                  <h3 className="font-bold">{neighbor.name}</h3>
+                  <p className="text-sm">
+                    <span className="inline-flex items-center gap-1">
+                      <Flag size={12} className="text-muted-foreground" />
+                      {neighbor.country.name}
+                    </span>
+                  </p>
+                  <p className="text-xs mt-1">à {neighbor.distance} km</p>
+                </div>
+              </Popup>
+            </Marker>
+          ))}
+          
+          {/* Marqueurs des événements */}
+          {showEvents && events.map((event) => (
+            <Marker 
+              key={`event-${event.id}`}
+              position={[event.lat, event.lng]}
+              icon={eventIcon}
+            >
+              <Popup>
+                <div className="p-1">
+                  <h3 className="font-bold">{event.name}</h3>
+                  <p className="text-xs mt-1">
+                    <Calendar size={12} className="inline mr-1" />
+                    {event.date} à {event.time}
+                  </p>
+                  <p className="text-xs mt-1">Organisé par: {event.createdBy}</p>
+                </div>
+              </Popup>
             </Marker>
           ))}
         </MapContainer>
@@ -208,7 +285,7 @@ const MapView = ({ className = "", previewMode = false }: MapViewProps) => {
         </div>
       </div>
       
-      {/* Radius control */}
+      {/* Radius and Filter Controls */}
       <div className="absolute bottom-4 left-4 right-4">
         <Card className="shadow-lg bg-background/90 backdrop-blur-sm">
           <CardContent className="p-4">
@@ -224,10 +301,110 @@ const MapView = ({ className = "", previewMode = false }: MapViewProps) => {
                 step={0.5}
                 onValueChange={(value) => setRadius(value[0])}
               />
+              
+              {/* Country filter */}
+              <div className="flex flex-wrap gap-2 mt-3">
+                <Button 
+                  size="sm" 
+                  variant={countryFilter === null ? "default" : "outline"}
+                  onClick={() => setCountryFilter(null)}
+                >
+                  Tous
+                </Button>
+                {Array.from(new Set(neighbors.map(n => n.country.code))).map(code => {
+                  const country = neighbors.find(n => n.country.code === code)?.country;
+                  return (
+                    <Button 
+                      key={code}
+                      size="sm" 
+                      variant={countryFilter === code ? "default" : "outline"}
+                      onClick={() => setCountryFilter(code)}
+                    >
+                      {country?.name}
+                    </Button>
+                  );
+                })}
+              </div>
+              
+              {/* Event controls */}
+              <div className="flex items-center justify-between mt-3">
+                <div className="flex items-center gap-1">
+                  <input 
+                    type="checkbox" 
+                    id="show-events" 
+                    checked={showEvents} 
+                    onChange={(e) => setShowEvents(e.target.checked)}
+                    className="rounded border-gray-300"
+                  />
+                  <label htmlFor="show-events" className="text-sm">
+                    Afficher les événements
+                  </label>
+                </div>
+                <Button size="sm" onClick={handleAddEvent}>
+                  Nouvel événement
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
       </div>
+      
+      {/* Event Form Dialog */}
+      {showEventForm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <Card className="w-full max-w-md mx-4">
+            <CardContent className="p-6">
+              <h3 className="text-xl font-bold mb-4">Créer un nouvel événement</h3>
+              <form onSubmit={handleSubmitEvent} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Nom de l'événement</label>
+                  <input 
+                    type="text" 
+                    required
+                    value={newEvent.name}
+                    onChange={(e) => setNewEvent({...newEvent, name: e.target.value})}
+                    className="w-full p-2 border rounded"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Date</label>
+                    <input 
+                      type="date" 
+                      required
+                      value={newEvent.date}
+                      onChange={(e) => setNewEvent({...newEvent, date: e.target.value})}
+                      className="w-full p-2 border rounded"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Heure</label>
+                    <input 
+                      type="time" 
+                      required
+                      value={newEvent.time}
+                      onChange={(e) => setNewEvent({...newEvent, time: e.target.value})}
+                      className="w-full p-2 border rounded"
+                    />
+                  </div>
+                </div>
+                <div className="pt-2 flex justify-end gap-2">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => setShowEventForm(false)}
+                  >
+                    Annuler
+                  </Button>
+                  <Button type="submit">
+                    Créer l'événement
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      )}
       
       {/* Selected neighbor card */}
       {selectedNeighbor && (
@@ -243,6 +420,10 @@ const MapView = ({ className = "", previewMode = false }: MapViewProps) => {
                   <div className="flex items-center text-sm text-muted-foreground">
                     <MapPin size={12} className="mr-1" />
                     <span>à {selectedNeighbor.distance} km</span>
+                  </div>
+                  <div className="flex items-center text-sm text-muted-foreground mt-1">
+                    <Flag size={12} className="mr-1" />
+                    <span>{selectedNeighbor.country.name}</span>
                   </div>
                   <Button size="sm" className="mt-2 w-full" onClick={() => setSelectedNeighbor(null)}>
                     Voir le profil
