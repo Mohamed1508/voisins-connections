@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MapPin, MessageCircle, Calendar, ArrowLeft } from "lucide-react";
-import { ProfileCard } from "@/components/profile/ProfileCard";
+import ProfileCard from "@/components/profile/ProfileCard";
 import { useToast } from "@/hooks/use-toast";
 
 // Simulation de données utilisateur (à remplacer par des données réelles)
@@ -117,3 +117,4 @@ const Separator = ({ className }: { className?: string }) => {
 };
 
 export default ProfilePage;
+

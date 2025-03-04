@@ -1,10 +1,10 @@
 
 import { useState } from "react";
-import { MapView } from "@/components/map/MapView";
-import { NeighborsList } from "@/components/neighbors/NeighborsList";
+import MapView from "@/components/map/MapView";
+import NeighborsList from "@/components/neighbors/NeighborsList";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ConversationList } from "@/components/messages/ConversationList";
-import { MessageBox } from "@/components/messages/MessageBox";
+import ConversationList from "@/components/messages/ConversationList";
+import MessageBox from "@/components/messages/MessageBox";
 import { Separator } from "@/components/ui/separator";
 import { Map, MessageCircle, Users } from "lucide-react";
 
@@ -67,3 +67,4 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+

@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { MapView } from "@/components/map/MapView";
+import MapView from "@/components/map/MapView";
 import { Link } from "react-router-dom";
 import { UserPlus, MessageCircle, Map, Users } from "lucide-react";
 
@@ -78,3 +78,4 @@ const FeatureCard = ({ icon, title, description }: { icon: React.ReactNode, titl
 };
 
 export default Index;
+

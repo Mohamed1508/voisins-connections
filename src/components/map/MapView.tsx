@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -8,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 
 interface MapViewProps {
   className?: string;
+  previewMode?: boolean;
 }
 
 // Simuler la localisation de l'utilisateur
@@ -25,7 +25,7 @@ const neighbors = [
   { id: 5, name: "Julie M.", lat: 48.8536, lng: 2.3482, distance: 0.7 },
 ];
 
-const MapView = ({ className = "" }: MapViewProps) => {
+const MapView = ({ className = "", previewMode = false }: MapViewProps) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const [radius, setRadius] = useState(1);
   const [isMapLoaded, setIsMapLoaded] = useState(false);
