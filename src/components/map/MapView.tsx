@@ -11,7 +11,7 @@ import MapControls from "./MapControls";
 import CountrySearch from "./CountrySearch";
 import RadiusFilter from "./RadiusFilter";
 import NeighborCard from "./NeighborCard";
-import EventForm from "./EventForm";
+import EventForm from "../events/EventForm";
 
 interface MapViewProps {
   className?: string;
@@ -117,6 +117,7 @@ const MapView = ({ className = "", previewMode = false }: MapViewProps) => {
           style={{ height: "100%", width: "100%", borderRadius: "0.75rem" }}
           center={mapCenter}
           zoom={zoom}
+          key={`map-${mapCenter.join(',')}-${zoom}`}
         >
           <TileLayer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -126,7 +127,7 @@ const MapView = ({ className = "", previewMode = false }: MapViewProps) => {
           <MapController center={mapCenter} zoom={zoom} />
           
           {/* Position de l'utilisateur */}
-          <Marker position={[userLocation.lat, userLocation.lng]}>
+          <Marker position={[userLocation.lat, userLocation.lng]} icon={DefaultIcon}>
             <Popup>Votre position</Popup>
           </Marker>
           
@@ -142,6 +143,7 @@ const MapView = ({ className = "", previewMode = false }: MapViewProps) => {
             <Marker 
               key={neighbor.id}
               position={[neighbor.lat, neighbor.lng]}
+              icon={DefaultIcon}
               eventHandlers={{
                 click: () => handleNeighborClick(neighbor),
               }}
@@ -166,6 +168,7 @@ const MapView = ({ className = "", previewMode = false }: MapViewProps) => {
             <Marker 
               key={`event-${event.id}`}
               position={[event.lat, event.lng]}
+              icon={eventIcon}
             >
               <Popup>
                 <div className="p-1">

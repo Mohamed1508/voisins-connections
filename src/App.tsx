@@ -15,6 +15,7 @@ import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import ChatPage from "./pages/ChatPage";
 import CommunitySpots from "./pages/CommunitySpots";
+import Groups from "./pages/Groups";
 
 const queryClient = new QueryClient();
 
@@ -58,6 +59,14 @@ const AppWithProviders = () => (
               element={
                 <ProtectedRoute>
                   <CommunitySpots />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/groups"
+              element={
+                <ProtectedRoute>
+                  <Groups />
                 </ProtectedRoute>
               }
             />
