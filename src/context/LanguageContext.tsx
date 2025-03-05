@@ -1,119 +1,172 @@
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "./AuthContext";
 
-// Définir les traductions
-const translations = {
+type LanguageType = "fr" | "en" | "ar" | "es";
+
+type TranslationType = {
+  welcome: string;
+  discover: string;
+  neighbors: string;
+  features: string;
+  map: string;
+  mapDesc: string;
+  discoverNeighbors: string;
+  discoverNeighborsDesc: string;
+  messaging: string;
+  messagingDesc: string;
+  signup: string;
+  login: string;
+  dashboard: string;
+  messages: string;
+  backToConversations: string;
+  selectLanguage: string;
+  communitySpots: string;
+};
+
+type FooterTranslationType = {
+  description: string;
+  community: string;
+  privacy: string;
+  terms: string;
+  contact: string;
+  copyright: string;
+  madeWith: string;
+  communitySpots: string;
+};
+
+const translations: Record<LanguageType, TranslationType> = {
   fr: {
-    welcome: "Connectez-vous avec vos voisins",
-    discover: "Découvrez qui habite près de chez vous, échangez des services et créez une communauté locale vivante.",
+    welcome: "Bienvenue sur Voisins Proches",
+    discover: "Découvrez et échangez avec vos voisins d'origines diverses",
+    neighbors: "Voisins",
+    features: "Fonctionnalités",
+    map: "Carte interactive",
+    mapDesc: "Localisez vos voisins et organisez des événements près de chez vous",
+    discoverNeighbors: "Découvrez vos voisins",
+    discoverNeighborsDesc: "Rencontrez des personnes d'origines diverses dans votre quartier",
+    messaging: "Messagerie",
+    messagingDesc: "Échangez facilement avec vos voisins en toute sécurité",
     signup: "S'inscrire",
     login: "Se connecter",
-    features: "Fonctionnalités principales",
-    map: "Carte interactive",
-    mapDesc: "Visualisez les voisins proches de chez vous sur une carte intuitive.",
-    discoverNeighbors: "Découvrez vos voisins",
-    discoverNeighborsDesc: "Parcourez les profils des personnes qui habitent près de chez vous.",
-    messaging: "Messagerie directe",
-    messagingDesc: "Communiquez facilement avec vos voisins pour échanger des services ou organiser des événements.",
     dashboard: "Tableau de bord",
-    neighbors: "Voisins",
     messages: "Messages",
-    searchAddress: "Rechercher une adresse...",
-    searchRadius: "Rayon de recherche",
-    selectLanguage: "Langue",
     backToConversations: "Retour aux conversations",
+    selectLanguage: "Langue",
     communitySpots: "Spots communautaires",
-    events: "Événements",
-    profile: "Profil",
-    signOut: "Déconnexion"
   },
   en: {
-    welcome: "Connect with your neighbors",
-    discover: "Discover who lives near you, exchange services and create a vibrant local community.",
-    signup: "Sign up",
-    login: "Log in",
-    features: "Main features",
-    map: "Interactive map",
-    mapDesc: "Visualize nearby neighbors on an intuitive map.",
-    discoverNeighbors: "Discover your neighbors",
-    discoverNeighborsDesc: "Browse through profiles of people who live near you.",
-    messaging: "Direct messaging",
-    messagingDesc: "Easily communicate with your neighbors to exchange services or organize events.",
-    dashboard: "Dashboard",
+    welcome: "Welcome to Close Neighbors",
+    discover: "Discover and connect with neighbors from diverse origins",
     neighbors: "Neighbors",
+    features: "Features",
+    map: "Interactive Map",
+    mapDesc: "Locate your neighbors and organize events near you",
+    discoverNeighbors: "Discover your neighbors",
+    discoverNeighborsDesc: "Meet people from diverse backgrounds in your neighborhood",
+    messaging: "Messaging",
+    messagingDesc: "Safely and easily exchange with your neighbors",
+    signup: "Sign up",
+    login: "Login",
+    dashboard: "Dashboard",
     messages: "Messages",
-    searchAddress: "Search an address...",
-    searchRadius: "Search radius",
-    selectLanguage: "Language",
     backToConversations: "Back to conversations",
-    communitySpots: "Community spots",
-    events: "Events",
-    profile: "Profile",
-    signOut: "Sign out"
+    selectLanguage: "Language",
+    communitySpots: "Community Spots",
   },
   ar: {
-    welcome: "تواصل مع جيرانك",
-    discover: "اكتشف من يعيش بالقرب منك، تبادل الخدمات وأنشئ مجتمعًا محليًا نابضًا بالحياة.",
-    signup: "تسجيل",
-    login: "تسجيل الدخول",
-    features: "الميزات الرئيسية",
-    map: "خريطة تفاعلية",
-    mapDesc: "رؤية الجيران القريبين على خريطة سهلة الاستخدام.",
-    discoverNeighbors: "اكتشف جيرانك",
-    discoverNeighborsDesc: "تصفح ملفات الأشخاص الذين يعيشون بالقرب منك.",
-    messaging: "المراسلة المباشرة",
-    messagingDesc: "تواصل بسهولة مع جيرانك لتبادل الخدمات أو تنظيم الأحداث.",
-    dashboard: "لوحة التحكم",
+    welcome: "مرحبًا بك في الجيران القريبين",
+    discover: "اكتشف وتواصل مع الجيران من أصول متنوعة",
     neighbors: "الجيران",
+    features: "الميزات",
+    map: "خريطة تفاعلية",
+    mapDesc: "حدد موقع جيرانك ونظم الأحداث بالقرب منك",
+    discoverNeighbors: "اكتشف جيرانك",
+    discoverNeighborsDesc: "قابل أشخاصًا من خلفيات متنوعة في منطقتك",
+    messaging: "المراسلة",
+    messagingDesc: "تبادل بأمان وسهولة مع جيرانك",
+    signup: "التسجيل",
+    login: "تسجيل الدخول",
+    dashboard: "لوحة التحكم",
     messages: "الرسائل",
-    searchAddress: "ابحث عن عنوان...",
-    searchRadius: "نطاق البحث",
-    selectLanguage: "اللغة",
     backToConversations: "العودة إلى المحادثات",
+    selectLanguage: "اللغة",
     communitySpots: "أماكن المجتمع",
-    events: "الأحداث",
-    profile: "الملف الشخصي",
-    signOut: "تسجيل الخروج"
   },
   es: {
-    welcome: "Conéctate con tus vecinos",
-    discover: "Descubre quién vive cerca de ti, intercambia servicios y crea una comunidad local vibrante.",
+    welcome: "Bienvenido a Vecinos Cercanos",
+    discover: "Descubre y conéctate con vecinos de diversos orígenes",
+    neighbors: "Vecinos",
+    features: "Características",
+    map: "Mapa Interactivo",
+    mapDesc: "Localiza a tus vecinos y organiza eventos cerca de ti",
+    discoverNeighbors: "Descubre a tus vecinos",
+    discoverNeighborsDesc: "Conoce a personas de diversos orígenes en tu barrio",
+    messaging: "Mensajería",
+    messagingDesc: "Intercambia de forma segura y fácil con tus vecinos",
     signup: "Registrarse",
     login: "Iniciar sesión",
-    features: "Características principales",
-    map: "Mapa interactivo",
-    mapDesc: "Visualiza a los vecinos cercanos en un mapa intuitivo.",
-    discoverNeighbors: "Descubre a tus vecinos",
-    discoverNeighborsDesc: "Navega por los perfiles de las personas que viven cerca de ti.",
-    messaging: "Mensajería directa",
-    messagingDesc: "Comunícate fácilmente con tus vecinos para intercambiar servicios u organizar eventos.",
-    dashboard: "Panel de control",
-    neighbors: "Vecinos",
+    dashboard: "Tablero",
     messages: "Mensajes",
-    searchAddress: "Buscar una dirección...",
-    searchRadius: "Radio de búsqueda",
-    selectLanguage: "Idioma",
     backToConversations: "Volver a las conversaciones",
+    selectLanguage: "Idioma",
     communitySpots: "Lugares comunitarios",
-    events: "Eventos",
-    profile: "Perfil",
-    signOut: "Cerrar sesión"
-  }
+  },
 };
 
-// Type pour le contexte
+const footerTranslations: Record<LanguageType, FooterTranslationType> = {
+  fr: {
+    description: "Voisins Proches est une application qui aide à créer des liens entre voisins d'origines diverses.",
+    community: "Communauté",
+    privacy: "Confidentialité",
+    terms: "Conditions d'utilisation",
+    contact: "Contact",
+    copyright: "Tous droits réservés",
+    madeWith: "Fait avec",
+    communitySpots: "Spots communautaires",
+  },
+  en: {
+    description: "Close Neighbors is an app that helps create connections between neighbors from diverse origins.",
+    community: "Community",
+    privacy: "Privacy",
+    terms: "Terms of Service",
+    contact: "Contact",
+    copyright: "All rights reserved",
+    madeWith: "Made with",
+    communitySpots: "Community Spots",
+  },
+  ar: {
+    description: "الجيران القريبون هو تطبيق يساعد على إنشاء روابط بين الجيران من أصول متنوعة.",
+    community: "المجتمع",
+    privacy: "الخصوصية",
+    terms: "شروط الاستخدام",
+    contact: "اتصل بنا",
+    copyright: "جميع الحقوق محفوظة",
+    madeWith: "صنع بـ",
+    communitySpots: "أماكن المجتمع",
+  },
+  es: {
+    description: "Vecinos Cercanos es una aplicación que ayuda a crear conexiones entre vecinos de diversos orígenes.",
+    community: "Comunidad",
+    privacy: "Privacidad",
+    terms: "Términos de servicio",
+    contact: "Contacto",
+    copyright: "Todos los derechos reservados",
+    madeWith: "Hecho con",
+    communitySpots: "Lugares comunitarios",
+  },
+};
+
 type LanguageContextType = {
-  language: string;
-  setLanguage: (lang: string) => void;
-  translations: Record<string, string>;
+  language: LanguageType;
+  setLanguage: (language: LanguageType) => void;
+  translations: TranslationType;
+  footerTranslations: FooterTranslationType;
 };
 
-// Créer le contexte
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
-// Hook personnalisé pour utiliser le contexte
 export const useLanguage = () => {
   const context = useContext(LanguageContext);
   if (!context) {
@@ -122,77 +175,58 @@ export const useLanguage = () => {
   return context;
 };
 
-// Provider du contexte
-export const LanguageProvider = ({ children }: { children: ReactNode }) => {
-  const [language, setLanguageState] = useState(() => {
-    const savedLang = localStorage.getItem("language");
-    return savedLang || "fr";
-  });
-  
+export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [language, setLanguage] = useState<LanguageType>("fr");
   const { user } = useAuth();
-  
-  // Charger la préférence de langue de l'utilisateur depuis Supabase
+
+  // Récupérer la préférence de langue depuis Supabase lors de la connexion
   useEffect(() => {
-    const fetchUserLanguage = async () => {
+    const fetchUserLanguagePreference = async () => {
       if (user) {
         try {
           const { data, error } = await supabase
-            .from('users')
-            .select('ui_language')
-            .eq('id', user.id)
+            .from("users")
+            .select("ui_language")
+            .eq("id", user.id)
             .single();
-            
-          if (!error && data && data.ui_language) {
-            setLanguageState(data.ui_language);
+
+          if (error) throw error;
+          if (data && data.ui_language) {
+            setLanguage(data.ui_language as LanguageType);
           }
         } catch (error) {
           console.error("Error fetching user language preference:", error);
         }
       }
     };
-    
-    fetchUserLanguage();
+
+    fetchUserLanguagePreference();
   }, [user]);
 
-  // Mettre à jour le localStorage lorsque la langue change
-  useEffect(() => {
-    localStorage.setItem("language", language);
-    // Mettre à jour l'attribut dir pour le support RTL
-    document.documentElement.dir = language === "ar" ? "rtl" : "ltr";
-    // Mettre à jour la classe RTL pour les styles spécifiques
-    if (language === "ar") {
-      document.documentElement.classList.add("rtl");
-    } else {
-      document.documentElement.classList.remove("rtl");
-    }
-  }, [language]);
-  
-  const setLanguage = async (newLanguage: string) => {
-    setLanguageState(newLanguage);
+  // Mettre à jour la préférence de langue dans Supabase
+  const handleSetLanguage = async (newLanguage: LanguageType) => {
+    setLanguage(newLanguage);
     
-    // Si l'utilisateur est connecté, mettre à jour sa préférence de langue
     if (user) {
       try {
-        await supabase
-          .from('users')
+        const { error } = await supabase
+          .from("users")
           .update({ ui_language: newLanguage })
-          .eq('id', user.id);
+          .eq("id", user.id);
+
+        if (error) throw error;
       } catch (error) {
         console.error("Error updating user language preference:", error);
       }
     }
   };
 
-  // Valeur du contexte
   const value = {
     language,
-    setLanguage,
-    translations: translations[language as keyof typeof translations]
+    setLanguage: handleSetLanguage,
+    translations: translations[language],
+    footerTranslations: footerTranslations[language],
   };
 
-  return (
-    <LanguageContext.Provider value={value}>
-      {children}
-    </LanguageContext.Provider>
-  );
+  return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
 };

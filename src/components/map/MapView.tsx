@@ -115,8 +115,8 @@ const MapView = ({ className = "", previewMode = false }: MapViewProps) => {
       <div className="w-full h-full min-h-[300px]">
         <MapContainer 
           style={{ height: "100%", width: "100%", borderRadius: "0.75rem" }}
-          initialCenter={mapCenter}
-          initialZoom={zoom}
+          center={mapCenter}
+          zoom={zoom}
         >
           <TileLayer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -166,7 +166,6 @@ const MapView = ({ className = "", previewMode = false }: MapViewProps) => {
             <Marker 
               key={`event-${event.id}`}
               position={[event.lat, event.lng]}
-              icon={eventIcon}
             >
               <Popup>
                 <div className="p-1">
