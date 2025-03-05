@@ -1,5 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/context/AuthContext";
 
 // Définir les traductions
 const translations = {
@@ -21,7 +23,11 @@ const translations = {
     searchAddress: "Rechercher une adresse...",
     searchRadius: "Rayon de recherche",
     selectLanguage: "Langue",
-    backToConversations: "Retour aux conversations"
+    backToConversations: "Retour aux conversations",
+    communitySpots: "Spots communautaires",
+    events: "Événements",
+    profile: "Profil",
+    signOut: "Déconnexion"
   },
   en: {
     welcome: "Connect with your neighbors",
@@ -41,7 +47,11 @@ const translations = {
     searchAddress: "Search an address...",
     searchRadius: "Search radius",
     selectLanguage: "Language",
-    backToConversations: "Back to conversations"
+    backToConversations: "Back to conversations",
+    communitySpots: "Community spots",
+    events: "Events",
+    profile: "Profile",
+    signOut: "Sign out"
   },
   ar: {
     welcome: "تواصل مع جيرانك",
@@ -61,7 +71,35 @@ const translations = {
     searchAddress: "ابحث عن عنوان...",
     searchRadius: "نطاق البحث",
     selectLanguage: "اللغة",
-    backToConversations: "العودة إلى المحادثات"
+    backToConversations: "العودة إلى المحادثات",
+    communitySpots: "أماكن المجتمع",
+    events: "الأحداث",
+    profile: "الملف الشخصي",
+    signOut: "تسجيل الخروج"
+  },
+  es: {
+    welcome: "Conéctate con tus vecinos",
+    discover: "Descubre quién vive cerca de ti, intercambia servicios y crea una comunidad local vibrante.",
+    signup: "Registrarse",
+    login: "Iniciar sesión",
+    features: "Características principales",
+    map: "Mapa interactivo",
+    mapDesc: "Visualiza a los vecinos cercanos en un mapa intuitivo.",
+    discoverNeighbors: "Descubre a tus vecinos",
+    discoverNeighborsDesc: "Navega por los perfiles de las personas que viven cerca de ti.",
+    messaging: "Mensajería directa",
+    messagingDesc: "Comunícate fácilmente con tus vecinos para intercambiar servicios u organizar eventos.",
+    dashboard: "Panel de control",
+    neighbors: "Vecinos",
+    messages: "Mensajes",
+    searchAddress: "Buscar una dirección...",
+    searchRadius: "Radio de búsqueda",
+    selectLanguage: "Idioma",
+    backToConversations: "Volver a las conversaciones",
+    communitySpots: "Lugares comunitarios",
+    events: "Eventos",
+    profile: "Perfil",
+    signOut: "Cerrar sesión"
   }
 };
 
@@ -86,11 +124,35 @@ export const useLanguage = () => {
 
 // Provider du contexte
 export const LanguageProvider = ({ children }: { children: ReactNode }) => {
-  // Récupérer la langue du localStorage ou utiliser fr par défaut
-  const [language, setLanguage] = useState(() => {
+  const [language, setLanguageState] = useState(() => {
     const savedLang = localStorage.getItem("language");
     return savedLang || "fr";
   });
+  
+  const { user } = useAuth();
+  
+  // Charger la préférence de langue de l'utilisateur depuis Supabase
+  useEffect(() => {
+    const fetchUserLanguage = async () => {
+      if (user) {
+        try {
+          const { data, error } = await supabase
+            .from('users')
+            .select('ui_language')
+            .eq('id', user.id)
+            .single();
+            
+          if (!error && data && data.ui_language) {
+            setLanguageState(data.ui_language);
+          }
+        } catch (error) {
+          console.error("Error fetching user language preference:", error);
+        }
+      }
+    };
+    
+    fetchUserLanguage();
+  }, [user]);
 
   // Mettre à jour le localStorage lorsque la langue change
   useEffect(() => {
@@ -104,6 +166,22 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
       document.documentElement.classList.remove("rtl");
     }
   }, [language]);
+  
+  const setLanguage = async (newLanguage: string) => {
+    setLanguageState(newLanguage);
+    
+    // Si l'utilisateur est connecté, mettre à jour sa préférence de langue
+    if (user) {
+      try {
+        await supabase
+          .from('users')
+          .update({ ui_language: newLanguage })
+          .eq('id', user.id);
+      } catch (error) {
+        console.error("Error updating user language preference:", error);
+      }
+    }
+  };
 
   // Valeur du contexte
   const value = {

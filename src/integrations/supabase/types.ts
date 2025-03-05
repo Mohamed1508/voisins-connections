@@ -9,7 +9,178 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      community_spots: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          lat: number
+          lng: number
+          name: string
+          origin_related: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          lat: number
+          lng: number
+          name: string
+          origin_related?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          lat?: number
+          lng?: number
+          name?: string
+          origin_related?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_spots_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      events: {
+        Row: {
+          created_at: string
+          created_by: string
+          date: string
+          description: string | null
+          id: string
+          lat: number
+          lng: number
+          name: string
+          time: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          date: string
+          description?: string | null
+          id?: string
+          lat: number
+          lng: number
+          name: string
+          time: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          date?: string
+          description?: string | null
+          id?: string
+          lat?: number
+          lng?: number
+          name?: string
+          time?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "events_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          read: boolean | null
+          receiver_id: string
+          sender_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          read?: boolean | null
+          receiver_id: string
+          sender_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          read?: boolean | null
+          receiver_id?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_receiver_id_fkey"
+            columns: ["receiver_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      users: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string
+          email: string
+          id: string
+          interests: string[] | null
+          languages: string[] | null
+          lat: number | null
+          lng: number | null
+          origin_country: string | null
+          ui_language: string | null
+          username: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          email: string
+          id: string
+          interests?: string[] | null
+          languages?: string[] | null
+          lat?: number | null
+          lng?: number | null
+          origin_country?: string | null
+          ui_language?: string | null
+          username?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          interests?: string[] | null
+          languages?: string[] | null
+          lat?: number | null
+          lng?: number | null
+          origin_country?: string | null
+          ui_language?: string | null
+          username?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
