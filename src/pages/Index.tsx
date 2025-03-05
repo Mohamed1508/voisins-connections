@@ -29,7 +29,7 @@ const Index = () => {
                 <Button size="lg" asChild>
                   <Link to="/signup">
                     <UserPlus className="mr-2 h-5 w-5" />
-                    {translations.signup}
+                    {translations.signUp}
                   </Link>
                 </Button>
                 <Button size="lg" variant="outline" asChild>
@@ -40,7 +40,12 @@ const Index = () => {
               </div>
             </div>
             <div className="rounded-xl overflow-hidden shadow-xl h-[400px]">
-              <MapView previewMode={true} />
+              <MapView
+                previewMode={true}
+                userLocation={{ lat: 48.8566, lng: 2.3522 }}
+                neighbors={[]}
+                events={[]}
+              />
             </div>
           </div>
         </div>
@@ -75,7 +80,7 @@ const Index = () => {
 
 const FeatureCard = ({ icon, title, description }: { icon: React.ReactNode, title: string, description: string }) => {
   return (
-    <div className="bg-card shadow-md rounded-lg p-6 hover:shadow-lg transition-all-200">
+    <div className="bg-card shadow-md rounded-lg p-6 hover:shadow-lg transition-all duration-200">
       <div className="mb-4">{icon}</div>
       <h3 className="text-xl font-semibold mb-2">{title}</h3>
       <p className="text-muted-foreground">{description}</p>

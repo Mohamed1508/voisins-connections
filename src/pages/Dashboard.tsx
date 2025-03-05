@@ -1,74 +1,85 @@
-
-import { useState } from "react";
-import MapView from "@/components/map/MapView";
-import NeighborsList from "@/components/neighbors/NeighborsList";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import ConversationList from "@/components/messages/ConversationList";
-import MessageBox from "@/components/messages/MessageBox";
-import { Separator } from "@/components/ui/separator";
-import { Map, MessageCircle, Users } from "lucide-react";
-import Header from "@/components/layout/Header";
+import React from "react";
+import MainLayout from "@/components/layout/MainLayout";
 import { useLanguage } from "@/context/LanguageContext";
+import MapView from "@/components/map/MapView";
 
+// Import other components as needed
+// Mock data for development
+const mockNeighbors = [
+  {
+    id: 1,
+    name: "Alice",
+    lat: 48.8566,
+    lng: 2.3522,
+    distance: 0.5,
+    country: { code: "FR", name: "France" }
+  },
+  {
+    id: 2,
+    name: "Bob",
+    lat: 48.8606,
+    lng: 2.3376,
+    distance: 1.2,
+    country: { code: "FR", name: "France" }
+  }
+];
+
+const mockEvents = [
+  {
+    id: 1,
+    name: "Community Picnic",
+    date: "2023-06-15",
+    time: "14:00",
+    lat: 48.8646,
+    lng: 2.3426,
+    createdBy: "Charlie"
+  }
+];
+
+// Dashboard component
 const Dashboard = () => {
-  const [selectedContact, setSelectedContact] = useState<number | null>(null);
   const { translations } = useLanguage();
-
-  const handleSelectConversation = (contactId: number) => {
-    setSelectedContact(contactId);
-  };
+  const [selectedConversation, setSelectedConversation] = React.useState<number | null>(null);
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-      <div className="container mx-auto p-4 flex-1">
-        <h1 className="text-3xl font-bold mb-6">{translations.dashboard}</h1>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Carte interactive (occupe toute la largeur sur mobile, 2/3 sur desktop) */}
-          <div className="lg:col-span-2 rounded-lg overflow-hidden shadow-md h-[400px] lg:h-[500px]">
-            <MapView />
+    <MainLayout>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div className="bg-card rounded-xl shadow-md p-6">
+          <h2 className="text-2xl font-bold mb-4">{translations.map}</h2>
+          <div className="h-[400px] rounded-lg overflow-hidden">
+            <MapView 
+              userLocation={{ lat: 48.8566, lng: 2.3522 }}
+              neighbors={mockNeighbors}
+              events={mockEvents}
+            />
           </div>
-          
-          {/* Onglets pour afficher soit la liste des voisins, soit la messagerie */}
-          <div className="lg:col-span-1">
-            <Tabs defaultValue="neighbors" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="neighbors">
-                  <Users className="h-4 w-4 mr-2" />
-                  {translations.neighbors}
-                </TabsTrigger>
-                <TabsTrigger value="messages">
-                  <MessageCircle className="h-4 w-4 mr-2" />
-                  {translations.messages}
-                </TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="neighbors" className="border rounded-md mt-2">
-                <NeighborsList />
-              </TabsContent>
-              
-              <TabsContent value="messages" className="border rounded-md mt-2">
-                {selectedContact ? (
-                  <div className="flex flex-col h-[400px]">
-                    <button 
-                      onClick={() => setSelectedContact(null)}
-                      className="p-2 text-sm text-primary hover:underline flex items-center"
-                    >
-                      ← {translations.backToConversations}
-                    </button>
-                    <Separator />
-                    <MessageBox contactId={selectedContact} onBack={() => setSelectedContact(null)} />
-                  </div>
-                ) : (
-                  <ConversationList onSelectConversation={handleSelectConversation} />
-                )}
-              </TabsContent>
-            </Tabs>
+        </div>
+
+        <div className="bg-card rounded-xl shadow-md p-6">
+          <h2 className="text-2xl font-bold mb-4">{translations.chats}</h2>
+          <div className="h-[400px] rounded-lg">
+            {selectedConversation ? (
+              <div className="h-full flex flex-col">
+                <button
+                  onClick={() => setSelectedConversation(null)}
+                  className="mb-4 text-sm text-primary flex items-center"
+                >
+                  ← {translations.backToConversations}
+                </button>
+                {/* MessageBox would be here */}
+              </div>
+            ) : (
+              <div className="h-full overflow-auto">
+                {/* ConversationList would be here */}
+                <div className="text-center text-muted-foreground py-8">
+                  No active conversations
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
-    </div>
+    </MainLayout>
   );
 };
 

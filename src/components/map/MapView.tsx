@@ -49,6 +49,7 @@ interface MapViewProps {
   onEventClick?: (event: any) => void;
   onSpotClick?: (spot: any) => void;
   onGroupClick?: (group: any) => void;
+  previewMode?: boolean;
 }
 
 const MapView: React.FC<MapViewProps> = ({
@@ -60,7 +61,8 @@ const MapView: React.FC<MapViewProps> = ({
   searchRadius = DEFAULT_RADIUS,
   onEventClick,
   onSpotClick,
-  onGroupClick
+  onGroupClick,
+  previewMode = false
 }) => {
   const [selectedNeighbor, setSelectedNeighbor] = useState<number | null>(null);
   const { translations } = useLanguage();
@@ -69,32 +71,75 @@ const MapView: React.FC<MapViewProps> = ({
     setSelectedNeighbor(neighborId === selectedNeighbor ? null : neighborId);
   };
 
+  // If in preview mode, render a simplified map with mock data
+  if (previewMode) {
+    return (
+      <MapContainer
+        center={[48.8566, 2.3522]} // Paris
+        zoom={13}
+        style={{ height: "100%", width: "100%", borderRadius: "0.5rem" }}
+      >
+        <TileLayer
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        />
+        {/* Sample neighbor */}
+        <Marker position={[48.8566, 2.3522]} icon={DefaultIcon}>
+          <Popup>
+            <div className="text-sm">
+              <p className="font-bold">Alice</p>
+              <p>2.1 km</p>
+            </div>
+          </Popup>
+        </Marker>
+        {/* Sample event */}
+        <Marker position={[48.8606, 2.3376]} icon={eventIcon}>
+          <Popup>
+            <div className="text-sm">
+              <p className="font-bold">Community Meetup</p>
+              <p>Tomorrow • 18:00</p>
+            </div>
+          </Popup>
+        </Marker>
+        {/* Sample group */}
+        <Marker position={[48.8526, 2.3395]} icon={groupIcon}>
+          <Popup>
+            <div className="text-sm">
+              <p className="font-bold">Neighborhood Watch</p>
+              <p className="text-xs">Local safety group</p>
+            </div>
+          </Popup>
+        </Marker>
+      </MapContainer>
+    );
+  }
+
   return (
     <MapContainer
-      style={{ height: "500px", width: "100%", borderRadius: "0.5rem" }}
       center={[userLocation.lat, userLocation.lng]}
       zoom={13}
+      style={{ height: "500px", width: "100%", borderRadius: "0.5rem" }}
     >
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       />
 
       {/* Marqueur pour l'utilisateur */}
       <Marker position={[userLocation.lat, userLocation.lng]}>
-        <Popup>{translations.yourLocation}</Popup>
+        <Popup>{translations.yourLocation || "Your location"}</Popup>
       </Marker>
 
       {/* Cercle pour le rayon de recherche */}
       <Circle
         center={[userLocation.lat, userLocation.lng]}
-        radius={kmToMeters(searchRadius)}
         pathOptions={{
           fillColor: "#3b82f6",
           fillOpacity: 0.1,
           color: "#3b82f6",
           weight: 1,
         }}
+        radius={kmToMeters(searchRadius)}
       />
 
       {/* Marqueurs pour les événements */}
@@ -113,7 +158,7 @@ const MapView: React.FC<MapViewProps> = ({
               <p>
                 {event.date} • {event.time}
               </p>
-              <p className="text-xs text-gray-600">{translations.createdBy}: {event.createdBy}</p>
+              <p className="text-xs text-gray-600">{translations.createdBy || "Created by"}: {event.createdBy}</p>
             </div>
           </Popup>
         </Marker>
@@ -127,11 +172,11 @@ const MapView: React.FC<MapViewProps> = ({
           icon={DefaultIcon}
         >
           <Popup>
-            <NeighborCard
-              neighbor={neighbor}
-              isSelected={selectedNeighbor === neighbor.id}
-              onClick={() => handleNeighborClick(neighbor.id)}
-            />
+            <div className="text-sm">
+              <p className="font-bold">{neighbor.name}</p>
+              <p>{neighbor.distance} km</p>
+              <p className="text-xs">{neighbor.country.name}</p>
+            </div>
           </Popup>
         </Marker>
       ))}
@@ -149,7 +194,7 @@ const MapView: React.FC<MapViewProps> = ({
           <Popup>
             <div className="text-sm">
               <p className="font-bold">{spot.name}</p>
-              <p className="text-xs text-gray-600">{translations.createdBy}: {spot.createdBy}</p>
+              <p className="text-xs text-gray-600">{translations.createdBy || "Created by"}: {spot.createdBy}</p>
             </div>
           </Popup>
         </Marker>
