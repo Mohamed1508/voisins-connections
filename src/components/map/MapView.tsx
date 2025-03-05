@@ -1,225 +1,179 @@
 
-import { useEffect, useState } from "react";
-import { MapContainer, TileLayer, Marker, Circle, Popup, useMap } from "react-leaflet";
-import { useToast } from "@/hooks/use-toast";
-import { useLanguage } from "@/context/LanguageContext";
-import { Flag, Calendar } from "lucide-react";
-import { DefaultIcon, eventIcon } from "./leaflet/LeafletConfig";
-import { userLocation, neighbors, events } from "./data/mockData";
-import MapController from "./MapController";
-import MapControls from "./MapControls";
-import CountrySearch from "./CountrySearch";
-import RadiusFilter from "./RadiusFilter";
+import React, { useState } from "react";
+import { MapContainer, TileLayer, Marker, Popup, Circle } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import { DefaultIcon, eventIcon, spotIcon, groupIcon } from "./leaflet/LeafletConfig";
 import NeighborCard from "./NeighborCard";
-import EventForm from "../events/EventForm";
+import { useLanguage } from "@/context/LanguageContext";
+
+// Définir le rayon de recherche en km
+const DEFAULT_RADIUS = 2;
+
+// Convertir le rayon en mètres
+const kmToMeters = (km: number) => km * 1000;
 
 interface MapViewProps {
-  className?: string;
-  previewMode?: boolean;
+  userLocation: { lat: number; lng: number };
+  neighbors: Array<{
+    id: number;
+    name: string;
+    lat: number;
+    lng: number;
+    distance: number;
+    country: { code: string; name: string };
+  }>;
+  events: Array<{
+    id: number;
+    name: string;
+    date: string;
+    time: string;
+    lat: number;
+    lng: number;
+    createdBy: string;
+  }>;
+  spots?: Array<{
+    id: string;
+    name: string;
+    lat: number;
+    lng: number;
+    createdBy: string;
+  }>;
+  groups?: Array<{
+    id: string;
+    name: string;
+    lat: number;
+    lng: number;
+    description?: string;
+  }>;
+  searchRadius?: number;
+  onEventClick?: (event: any) => void;
+  onSpotClick?: (spot: any) => void;
+  onGroupClick?: (group: any) => void;
 }
 
-const MapView = ({ className = "", previewMode = false }: MapViewProps) => {
-  const [radius, setRadius] = useState(1);
-  const [mapCenter, setMapCenter] = useState<[number, number]>([userLocation.lat, userLocation.lng]);
-  const [zoom, setZoom] = useState(13);
-  const [selectedNeighbor, setSelectedNeighbor] = useState<typeof neighbors[0] | null>(null);
-  const [countryFilter, setCountryFilter] = useState<string | null>(null);
-  const [showEvents, setShowEvents] = useState(true);
-  const [showEventForm, setShowEventForm] = useState(false);
-  const [newEvent, setNewEvent] = useState({ name: "", date: "", time: "", lat: 0, lng: 0 });
-  const { toast } = useToast();
+const MapView: React.FC<MapViewProps> = ({
+  userLocation,
+  neighbors,
+  events,
+  spots = [],
+  groups = [],
+  searchRadius = DEFAULT_RADIUS,
+  onEventClick,
+  onSpotClick,
+  onGroupClick
+}) => {
+  const [selectedNeighbor, setSelectedNeighbor] = useState<number | null>(null);
   const { translations } = useLanguage();
 
-  const handleLocate = () => {
-    setMapCenter([userLocation.lat, userLocation.lng]);
-    setZoom(13);
-    toast({
-      title: "Localisation activée",
-      description: "Votre position a été mise à jour.",
-    });
+  const handleNeighborClick = (neighborId: number) => {
+    setSelectedNeighbor(neighborId === selectedNeighbor ? null : neighborId);
   };
-
-  const handleZoomIn = () => {
-    setZoom((prev) => Math.min(prev + 1, 18));
-  };
-
-  const handleZoomOut = () => {
-    setZoom((prev) => Math.max(prev - 1, 3));
-  };
-
-  const handleNeighborClick = (neighbor: typeof neighbors[0]) => {
-    setSelectedNeighbor(neighbor);
-  };
-
-  const handleCountrySearch = async (countryName: string) => {
-    try {
-      // Utiliser l'API nominatim de OpenStreetMap pour geocoder le pays
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?country=${encodeURIComponent(
-          countryName
-        )}&format=json&limit=1`
-      );
-      const data = await response.json();
-      
-      if (data && data.length > 0) {
-        const { lat, lon } = data[0];
-        setMapCenter([parseFloat(lat), parseFloat(lon)]);
-        setZoom(6); // Zoom approprié pour un pays
-        toast({
-          title: "Pays trouvé",
-          description: `Affichage de: ${countryName}`,
-        });
-      } else {
-        toast({
-          title: "Pays non trouvé",
-          description: "Essayez un autre nom de pays",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Erreur",
-        description: "Impossible de rechercher le pays",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleAddEvent = () => {
-    setNewEvent({
-      ...newEvent,
-      lat: userLocation.lat,
-      lng: userLocation.lng
-    });
-    setShowEventForm(true);
-  };
-
-  const handleSubmitEvent = (eventData: { name: string; date: string; time: string; lat: number; lng: number }) => {
-    toast({
-      title: "Événement créé",
-      description: `Votre événement "${eventData.name}" a été ajouté à la carte.`,
-    });
-    // Here we would normally save to Supabase
-    setShowEventForm(false);
-    setNewEvent({ name: "", date: "", time: "", lat: 0, lng: 0 });
-  };
-
-  // Filter neighbors by country if filter is active
-  const filteredNeighbors = countryFilter 
-    ? neighbors.filter(n => n.country.code === countryFilter)
-    : neighbors;
 
   return (
-    <div className={`relative w-full rounded-xl overflow-hidden ${className}`}>
-      {/* Carte Leaflet */}
-      <div className="w-full h-full min-h-[300px]">
-        <MapContainer 
-          style={{ height: "100%", width: "100%", borderRadius: "0.75rem" }}
-          center={mapCenter}
-          zoom={zoom}
-          key={`map-${mapCenter.join(',')}-${zoom}`}
+    <MapContainer
+      style={{ height: "500px", width: "100%", borderRadius: "0.5rem" }}
+      center={[userLocation.lat, userLocation.lng]}
+      zoom={13}
+    >
+      <TileLayer
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      />
+
+      {/* Marqueur pour l'utilisateur */}
+      <Marker position={[userLocation.lat, userLocation.lng]}>
+        <Popup>{translations.yourLocation}</Popup>
+      </Marker>
+
+      {/* Cercle pour le rayon de recherche */}
+      <Circle
+        center={[userLocation.lat, userLocation.lng]}
+        radius={kmToMeters(searchRadius)}
+        pathOptions={{
+          fillColor: "#3b82f6",
+          fillOpacity: 0.1,
+          color: "#3b82f6",
+          weight: 1,
+        }}
+      />
+
+      {/* Marqueurs pour les événements */}
+      {events.map((event) => (
+        <Marker
+          key={event.id}
+          position={[event.lat, event.lng]}
+          icon={eventIcon}
+          eventHandlers={{
+            click: () => onEventClick && onEventClick(event),
+          }}
         >
-          <TileLayer
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          />
-          
-          <MapController center={mapCenter} zoom={zoom} />
-          
-          {/* Position de l'utilisateur */}
-          <Marker position={[userLocation.lat, userLocation.lng]} icon={DefaultIcon}>
-            <Popup>Votre position</Popup>
-          </Marker>
-          
-          {/* Cercle de rayon */}
-          <Circle 
-            center={[userLocation.lat, userLocation.lng]} 
-            pathOptions={{ fillColor: 'blue', fillOpacity: 0.1, color: 'blue', weight: 1 }}
-            radius={radius * 1000}
-          />
-          
-          {/* Marqueurs des voisins */}
-          {filteredNeighbors.map((neighbor) => (
-            <Marker 
-              key={neighbor.id}
-              position={[neighbor.lat, neighbor.lng]}
-              icon={DefaultIcon}
-              eventHandlers={{
-                click: () => handleNeighborClick(neighbor),
-              }}
-            >
-              <Popup>
-                <div className="p-1">
-                  <h3 className="font-bold">{neighbor.name}</h3>
-                  <p className="text-sm">
-                    <span className="inline-flex items-center gap-1">
-                      <Flag size={12} className="text-muted-foreground" />
-                      {neighbor.country.name}
-                    </span>
-                  </p>
-                  <p className="text-xs mt-1">à {neighbor.distance} km</p>
-                </div>
-              </Popup>
-            </Marker>
-          ))}
-          
-          {/* Marqueurs des événements */}
-          {showEvents && events.map((event) => (
-            <Marker 
-              key={`event-${event.id}`}
-              position={[event.lat, event.lng]}
-              icon={eventIcon}
-            >
-              <Popup>
-                <div className="p-1">
-                  <h3 className="font-bold">{event.name}</h3>
-                  <p className="text-xs mt-1">
-                    <Calendar size={12} className="inline mr-1" />
-                    {event.date} à {event.time}
-                  </p>
-                  <p className="text-xs mt-1">Organisé par: {event.createdBy}</p>
-                </div>
-              </Popup>
-            </Marker>
-          ))}
-        </MapContainer>
-      </div>
-      
-      {/* UI Components */}
-      <CountrySearch onSearch={handleCountrySearch} />
-      <MapControls 
-        onLocate={handleLocate}
-        onZoomIn={handleZoomIn}
-        onZoomOut={handleZoomOut}
-      />
-      <RadiusFilter 
-        radius={radius}
-        onRadiusChange={setRadius}
-        countryFilter={countryFilter}
-        onCountryFilterChange={setCountryFilter}
-        neighbors={neighbors}
-        showEvents={showEvents}
-        onShowEventsChange={setShowEvents}
-        onAddEvent={handleAddEvent}
-      />
-      
-      {/* Selected neighbor card */}
-      {selectedNeighbor && (
-        <NeighborCard 
-          neighbor={selectedNeighbor} 
-          onClose={() => setSelectedNeighbor(null)} 
-        />
-      )}
-      
-      {/* Event Form Dialog */}
-      {showEventForm && (
-        <EventForm 
-          onClose={() => setShowEventForm(false)}
-          onSubmit={handleSubmitEvent}
-          defaultLocation={userLocation}
-        />
-      )}
-    </div>
+          <Popup>
+            <div className="text-sm">
+              <p className="font-bold">{event.name}</p>
+              <p>
+                {event.date} • {event.time}
+              </p>
+              <p className="text-xs text-gray-600">{translations.createdBy}: {event.createdBy}</p>
+            </div>
+          </Popup>
+        </Marker>
+      ))}
+
+      {/* Marqueurs pour les voisins */}
+      {neighbors.map((neighbor) => (
+        <Marker
+          key={neighbor.id}
+          position={[neighbor.lat, neighbor.lng]}
+          icon={DefaultIcon}
+        >
+          <Popup>
+            <NeighborCard
+              neighbor={neighbor}
+              isSelected={selectedNeighbor === neighbor.id}
+              onClick={() => handleNeighborClick(neighbor.id)}
+            />
+          </Popup>
+        </Marker>
+      ))}
+
+      {/* Marqueurs pour les lieux communautaires */}
+      {spots.map((spot) => (
+        <Marker
+          key={spot.id}
+          position={[spot.lat, spot.lng]}
+          icon={spotIcon}
+          eventHandlers={{
+            click: () => onSpotClick && onSpotClick(spot),
+          }}
+        >
+          <Popup>
+            <div className="text-sm">
+              <p className="font-bold">{spot.name}</p>
+              <p className="text-xs text-gray-600">{translations.createdBy}: {spot.createdBy}</p>
+            </div>
+          </Popup>
+        </Marker>
+      ))}
+
+      {/* Marqueurs pour les groupes */}
+      {groups.map((group) => (
+        <Marker
+          key={group.id}
+          position={[group.lat, group.lng]}
+          icon={groupIcon}
+          eventHandlers={{
+            click: () => onGroupClick && onGroupClick(group),
+          }}
+        >
+          <Popup>
+            <div className="text-sm">
+              <p className="font-bold">{group.name}</p>
+              {group.description && <p className="text-xs">{group.description}</p>}
+            </div>
+          </Popup>
+        </Marker>
+      ))}
+    </MapContainer>
   );
 };
 

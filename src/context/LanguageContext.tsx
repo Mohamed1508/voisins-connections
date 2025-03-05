@@ -1,359 +1,529 @@
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from './AuthContext';
+import React, { createContext, useContext, useState, ReactNode } from 'react';
 
-export type LanguageType = 'fr' | 'en' | 'es' | 'de';
+// Types de langues supportées
+type SupportedLanguage = 'fr' | 'en' | 'ar' | 'es';
 
-type TranslationType = {
-  // Page d'accueil
-  welcome: string;
-  neighbors: string;
-  discover: string;
-  signup: string;
-  login: string;
-  features: string;
-  map: string;
-  mapDesc: string;
-  discoverNeighbors: string;
-  discoverNeighborsDesc: string;
-  messaging: string;
-  messagingDesc: string;
-  
-  // Dashboard
-  dashboard: string;
-  messages: string;
-  backToConversations: string;
-  
-  // Navigation
+// Structure des traductions
+type Translations = {
+  // Navigation et layout
+  appName: string;
   home: string;
+  dashboard: string;
   profile: string;
-  chats: string;
-  spots: string;
-  logout: string;
-
-  // Footer
-  description: string;
-  community: string;
-  privacy: string;
-  terms: string;
-  contact: string;
-  copyright: string;
-  madeWith: string;
-  language: string;
+  messages: string;
   communitySpots: string;
+  groups: string;
+  signIn: string;
+  signUp: string;
+  logout: string;
   
-  // Map & Filter
+  // Accueil
+  welcome: string;
+  subtitle: string;
+  getStarted: string;
+  featuresTitle: string;
+  feature1Title: string;
+  feature1Description: string;
+  feature2Title: string;
+  feature2Description: string;
+  feature3Title: string;
+  feature3Description: string;
+  
+  // Authentification
+  email: string;
+  password: string;
+  confirmPassword: string;
+  name: string;
+  forgotPassword: string;
+  alreadyHaveAccount: string;
+  dontHaveAccount: string;
+  
+  // Tableau de bord
+  welcomeBack: string;
+  nearbyNeighbors: string;
+  upcomingEvents: string;
+  messages: string;
+  newMessage: string;
+  noMessages: string;
+  
+  // Profil
+  editProfile: string;
+  bio: string;
+  location: string;
+  save: string;
+  cancel: string;
+  originCountry: string;
+  
+  // Carte
+  yourLocation: string;
   searchRadius: string;
-  searchAddress: string;
+  neighbors: string;
+  events: string;
   
-  // Events
+  // Messages
+  send: string;
+  typeMessage: string;
+  
+  // Événements
   createEvent: string;
   eventName: string;
   date: string;
   time: string;
   description: string;
   locationNote: string;
-  cancel: string;
+  createdBy: string;
   
-  // Groups
-  groups: string;
+  // Lieux communautaires
+  createSpot: string;
+  spotName: string;
+  spotDescription: string;
+  spotOriginRelated: string;
+  
+  // Groupes
   createGroup: string;
   groupName: string;
   groupDescription: string;
-  members: string;
   joinGroup: string;
   leaveGroup: string;
   myGroups: string;
+  availableGroups: string;
+  members: string;
+  member: string;
+  admin: string;
+  
+  // Footer
+  about: string;
+  community: string;
+  privacy: string;
+  terms: string;
+  contact: string;
+  copyright: string;
+  madeWith: string;
 };
 
-const translations: Record<LanguageType, TranslationType> = {
+// Interface du contexte
+interface LanguageContextType {
+  language: SupportedLanguage;
+  setLanguage: (lang: SupportedLanguage) => void;
+  translations: Translations;
+  isRTL: boolean;
+}
+
+// Les traductions
+const translationsData: Record<SupportedLanguage, Translations> = {
   fr: {
-    welcome: "Bienvenue sur",
-    neighbors: "Voisins Proches",
-    discover: "Découvrez, rencontrez et connectez-vous avec vos voisins qui partagent vos origines et votre culture.",
-    signup: "S'inscrire",
-    login: "Connexion",
-    features: "Ce que nous offrons",
-    map: "Carte interactive",
-    mapDesc: "Visualisez vos voisins proches sur une carte et filtrez par pays d'origine.",
-    discoverNeighbors: "Découvrir des voisins",
-    discoverNeighborsDesc: "Trouvez des personnes partageant votre culture, langue ou pays d'origine.",
-    messaging: "Messagerie simple",
-    messagingDesc: "Connectez-vous et discutez directement avec vos nouveaux voisins.",
+    // Navigation et layout
+    appName: 'Voisins Proches',
+    home: 'Accueil',
+    dashboard: 'Tableau de bord',
+    profile: 'Profil',
+    messages: 'Messages',
+    communitySpots: 'Lieux communautaires',
+    groups: 'Groupes',
+    signIn: 'Connexion',
+    signUp: 'Inscription',
+    logout: 'Déconnexion',
     
-    dashboard: "Tableau de bord",
-    messages: "Messages",
-    backToConversations: "Retour aux conversations",
+    // Accueil
+    welcome: 'Bienvenue sur Voisins Proches',
+    subtitle: 'Connectez-vous avec vos voisins du monde entier',
+    getStarted: 'Commencer',
+    featuresTitle: 'Nos fonctionnalités',
+    feature1Title: 'Rencontrez vos voisins',
+    feature1Description: 'Découvrez les personnes qui vivent près de chez vous, en particulier celles qui partagent votre pays d\'origine',
+    feature2Title: 'Événements locaux',
+    feature2Description: 'Créez et participez à des événements dans votre quartier',
+    feature3Title: 'Groupes d\'intérêt',
+    feature3Description: 'Rejoignez des groupes basés sur des intérêts communs ou votre pays d\'origine',
     
-    home: "Accueil",
-    profile: "Profil",
-    chats: "Discussions",
-    spots: "Lieux",
-    logout: "Déconnexion",
+    // Authentification
+    email: 'Email',
+    password: 'Mot de passe',
+    confirmPassword: 'Confirmer le mot de passe',
+    name: 'Nom',
+    forgotPassword: 'Mot de passe oublié ?',
+    alreadyHaveAccount: 'Vous avez déjà un compte ?',
+    dontHaveAccount: 'Vous n\'avez pas de compte ?',
     
-    description: "Voisins Proches aide les personnes d'origine étrangère à trouver des voisins qui partagent leur culture.",
-    community: "Communauté",
-    privacy: "Confidentialité",
-    terms: "Conditions",
-    contact: "Contact",
-    copyright: "© 2023 Voisins Proches. Tous droits réservés.",
-    madeWith: "Fait avec ❤️ pour toutes les cultures",
-    language: "Langue",
-    communitySpots: "Lieux communautaires",
+    // Tableau de bord
+    welcomeBack: 'Bon retour',
+    nearbyNeighbors: 'Voisins à proximité',
+    upcomingEvents: 'Événements à venir',
+    newMessage: 'Nouveau message',
+    noMessages: 'Pas de messages',
     
-    searchRadius: "Rayon de recherche",
-    searchAddress: "Rechercher une adresse",
+    // Profil
+    editProfile: 'Modifier le profil',
+    bio: 'Bio',
+    location: 'Localisation',
+    save: 'Enregistrer',
+    cancel: 'Annuler',
+    originCountry: 'Pays d\'origine',
     
-    createEvent: "Créer un événement",
-    eventName: "Nom de l'événement",
-    date: "Date",
-    time: "Heure",
-    description: "Description",
-    locationNote: "L'événement sera créé à votre position actuelle",
-    cancel: "Annuler",
+    // Carte
+    yourLocation: 'Votre position',
+    searchRadius: 'Rayon de recherche',
+    neighbors: 'Voisins',
+    events: 'Événements',
     
-    groups: "Groupes",
-    createGroup: "Créer un groupe",
-    groupName: "Nom du groupe",
-    groupDescription: "Description du groupe",
-    members: "Membres",
-    joinGroup: "Rejoindre",
-    leaveGroup: "Quitter",
-    myGroups: "Mes groupes"
+    // Messages
+    send: 'Envoyer',
+    typeMessage: 'Tapez votre message...',
+    
+    // Événements
+    createEvent: 'Créer un événement',
+    eventName: 'Nom de l\'événement',
+    date: 'Date',
+    time: 'Heure',
+    description: 'Description',
+    locationNote: 'L\'événement sera créé à votre position actuelle sur la carte',
+    createdBy: 'Créé par',
+    
+    // Lieux communautaires
+    createSpot: 'Ajouter un lieu',
+    spotName: 'Nom du lieu',
+    spotDescription: 'Description du lieu',
+    spotOriginRelated: 'Lié au pays d\'origine',
+    
+    // Groupes
+    createGroup: 'Créer un groupe',
+    groupName: 'Nom du groupe',
+    groupDescription: 'Description du groupe',
+    joinGroup: 'Rejoindre',
+    leaveGroup: 'Quitter',
+    myGroups: 'Mes groupes',
+    availableGroups: 'Groupes disponibles',
+    members: 'Membres',
+    member: 'Membre',
+    admin: 'Admin',
+    
+    // Footer
+    about: 'À propos',
+    community: 'Communauté',
+    privacy: 'Confidentialité',
+    terms: 'Conditions',
+    contact: 'Contact',
+    copyright: '© 2023 Voisins Proches. Tous droits réservés.',
+    madeWith: 'Fait avec ❤️',
   },
+  
   en: {
-    welcome: "Welcome to",
-    neighbors: "Close Neighbors",
-    discover: "Discover, meet and connect with neighbors who share your origins and culture.",
-    signup: "Sign up",
-    login: "Login",
-    features: "What we offer",
-    map: "Interactive map",
-    mapDesc: "Visualize your close neighbors on a map and filter by country of origin.",
-    discoverNeighbors: "Discover neighbors",
-    discoverNeighborsDesc: "Find people sharing your culture, language or country of origin.",
-    messaging: "Simple messaging",
-    messagingDesc: "Connect and chat directly with your new neighbors.",
+    // Navigation et layout
+    appName: 'Close Neighbors',
+    home: 'Home',
+    dashboard: 'Dashboard',
+    profile: 'Profile',
+    messages: 'Messages',
+    communitySpots: 'Community Spots',
+    groups: 'Groups',
+    signIn: 'Sign In',
+    signUp: 'Sign Up',
+    logout: 'Logout',
     
-    dashboard: "Dashboard",
-    messages: "Messages",
-    backToConversations: "Back to conversations",
+    // Accueil
+    welcome: 'Welcome to Close Neighbors',
+    subtitle: 'Connect with your neighbors from around the world',
+    getStarted: 'Get Started',
+    featuresTitle: 'Our Features',
+    feature1Title: 'Meet Your Neighbors',
+    feature1Description: 'Discover people who live near you, especially those who share your country of origin',
+    feature2Title: 'Local Events',
+    feature2Description: 'Create and participate in events in your neighborhood',
+    feature3Title: 'Interest Groups',
+    feature3Description: 'Join groups based on common interests or your country of origin',
     
-    home: "Home",
-    profile: "Profile",
-    chats: "Chats",
-    spots: "Spots",
-    logout: "Logout",
+    // Authentification
+    email: 'Email',
+    password: 'Password',
+    confirmPassword: 'Confirm Password',
+    name: 'Name',
+    forgotPassword: 'Forgot Password?',
+    alreadyHaveAccount: 'Already have an account?',
+    dontHaveAccount: 'Don\'t have an account?',
     
-    description: "Close Neighbors helps people of foreign origin find neighbors who share their culture.",
-    community: "Community",
-    privacy: "Privacy",
-    terms: "Terms",
-    contact: "Contact",
-    copyright: "© 2023 Close Neighbors. All rights reserved.",
-    madeWith: "Made with ❤️ for all cultures",
-    language: "Language",
-    communitySpots: "Community Spots",
+    // Tableau de bord
+    welcomeBack: 'Welcome Back',
+    nearbyNeighbors: 'Nearby Neighbors',
+    upcomingEvents: 'Upcoming Events',
+    newMessage: 'New Message',
+    noMessages: 'No Messages',
     
-    searchRadius: "Search radius",
-    searchAddress: "Search address",
+    // Profil
+    editProfile: 'Edit Profile',
+    bio: 'Bio',
+    location: 'Location',
+    save: 'Save',
+    cancel: 'Cancel',
+    originCountry: 'Country of Origin',
     
-    createEvent: "Create event",
-    eventName: "Event name",
-    date: "Date",
-    time: "Time",
-    description: "Description",
-    locationNote: "The event will be created at your current location",
-    cancel: "Cancel",
+    // Carte
+    yourLocation: 'Your Location',
+    searchRadius: 'Search Radius',
+    neighbors: 'Neighbors',
+    events: 'Events',
     
-    groups: "Groups",
-    createGroup: "Create group",
-    groupName: "Group name",
-    groupDescription: "Group description",
-    members: "Members",
-    joinGroup: "Join",
-    leaveGroup: "Leave",
-    myGroups: "My groups"
+    // Messages
+    send: 'Send',
+    typeMessage: 'Type your message...',
+    
+    // Événements
+    createEvent: 'Create Event',
+    eventName: 'Event Name',
+    date: 'Date',
+    time: 'Time',
+    description: 'Description',
+    locationNote: 'Event will be created at your current location on the map',
+    createdBy: 'Created by',
+    
+    // Lieux communautaires
+    createSpot: 'Add Spot',
+    spotName: 'Spot Name',
+    spotDescription: 'Spot Description',
+    spotOriginRelated: 'Related to country of origin',
+    
+    // Groupes
+    createGroup: 'Create Group',
+    groupName: 'Group Name',
+    groupDescription: 'Group Description',
+    joinGroup: 'Join',
+    leaveGroup: 'Leave',
+    myGroups: 'My Groups',
+    availableGroups: 'Available Groups',
+    members: 'Members',
+    member: 'Member',
+    admin: 'Admin',
+    
+    // Footer
+    about: 'About',
+    community: 'Community',
+    privacy: 'Privacy',
+    terms: 'Terms',
+    contact: 'Contact',
+    copyright: '© 2023 Close Neighbors. All rights reserved.',
+    madeWith: 'Made with ❤️',
   },
+  
+  ar: {
+    // Navigation et layout
+    appName: 'الجيران القريبون',
+    home: 'الرئيسية',
+    dashboard: 'لوحة التحكم',
+    profile: 'الملف الشخصي',
+    messages: 'الرسائل',
+    communitySpots: 'الأماكن المجتمعية',
+    groups: 'المجموعات',
+    signIn: 'تسجيل الدخول',
+    signUp: 'التسجيل',
+    logout: 'تسجيل الخروج',
+    
+    // Accueil
+    welcome: 'مرحبًا بك في الجيران القريبون',
+    subtitle: 'تواصل مع جيرانك من جميع أنحاء العالم',
+    getStarted: 'ابدأ الآن',
+    featuresTitle: 'ميزاتنا',
+    feature1Title: 'تعرف على جيرانك',
+    feature1Description: 'اكتشف الأشخاص الذين يعيشون بالقرب منك، خاصة أولئك الذين يشاركونك بلد المنشأ',
+    feature2Title: 'الأحداث المحلية',
+    feature2Description: 'إنشاء والمشاركة في الأحداث في حيك',
+    feature3Title: 'مجموعات الاهتمام',
+    feature3Description: 'انضم إلى مجموعات بناءً على الاهتمامات المشتركة أو بلد المنشأ',
+    
+    // Authentification
+    email: 'البريد الإلكتروني',
+    password: 'كلمة المرور',
+    confirmPassword: 'تأكيد كلمة المرور',
+    name: 'الاسم',
+    forgotPassword: 'نسيت كلمة المرور؟',
+    alreadyHaveAccount: 'هل لديك حساب بالفعل؟',
+    dontHaveAccount: 'ليس لديك حساب؟',
+    
+    // Tableau de bord
+    welcomeBack: 'مرحبًا بعودتك',
+    nearbyNeighbors: 'الجيران القريبون',
+    upcomingEvents: 'الأحداث القادمة',
+    newMessage: 'رسالة جديدة',
+    noMessages: 'لا توجد رسائل',
+    
+    // Profil
+    editProfile: 'تعديل الملف الشخصي',
+    bio: 'السيرة الذاتية',
+    location: 'الموقع',
+    save: 'حفظ',
+    cancel: 'إلغاء',
+    originCountry: 'بلد المنشأ',
+    
+    // Carte
+    yourLocation: 'موقعك',
+    searchRadius: 'نطاق البحث',
+    neighbors: 'الجيران',
+    events: 'الأحداث',
+    
+    // Messages
+    send: 'إرسال',
+    typeMessage: 'اكتب رسالتك...',
+    
+    // Événements
+    createEvent: 'إنشاء حدث',
+    eventName: 'اسم الحدث',
+    date: 'التاريخ',
+    time: 'الوقت',
+    description: 'الوصف',
+    locationNote: 'سيتم إنشاء الحدث في موقعك الحالي على الخريطة',
+    createdBy: 'أنشأه',
+    
+    // Lieux communautaires
+    createSpot: 'إضافة مكان',
+    spotName: 'اسم المكان',
+    spotDescription: 'وصف المكان',
+    spotOriginRelated: 'متعلق ببلد المنشأ',
+    
+    // Groupes
+    createGroup: 'إنشاء مجموعة',
+    groupName: 'اسم المجموعة',
+    groupDescription: 'وصف المجموعة',
+    joinGroup: 'انضمام',
+    leaveGroup: 'مغادرة',
+    myGroups: 'مجموعاتي',
+    availableGroups: 'المجموعات المتاحة',
+    members: 'الأعضاء',
+    member: 'عضو',
+    admin: 'مسؤول',
+    
+    // Footer
+    about: 'حول',
+    community: 'المجتمع',
+    privacy: 'الخصوصية',
+    terms: 'الشروط',
+    contact: 'اتصل بنا',
+    copyright: '© 2023 الجيران القريبون. جميع الحقوق محفوظة.',
+    madeWith: 'صنع بـ ❤️',
+  },
+  
   es: {
-    welcome: "Bienvenido a",
-    neighbors: "Vecinos Cercanos",
-    discover: "Descubre, conoce y conéctate con vecinos que comparten tus orígenes y cultura.",
-    signup: "Registrarse",
-    login: "Iniciar sesión",
-    features: "Lo que ofrecemos",
-    map: "Mapa interactivo",
-    mapDesc: "Visualiza a tus vecinos cercanos en un mapa y filtra por país de origen.",
-    discoverNeighbors: "Descubrir vecinos",
-    discoverNeighborsDesc: "Encuentra personas que comparten tu cultura, idioma o país de origen.",
-    messaging: "Mensajería simple",
-    messagingDesc: "Conéctate y chatea directamente con tus nuevos vecinos.",
+    // Navigation et layout
+    appName: 'Vecinos Cercanos',
+    home: 'Inicio',
+    dashboard: 'Panel',
+    profile: 'Perfil',
+    messages: 'Mensajes',
+    communitySpots: 'Lugares comunitarios',
+    groups: 'Grupos',
+    signIn: 'Iniciar sesión',
+    signUp: 'Registrarse',
+    logout: 'Cerrar sesión',
     
-    dashboard: "Panel de control",
-    messages: "Mensajes",
-    backToConversations: "Volver a conversaciones",
+    // Accueil
+    welcome: 'Bienvenido a Vecinos Cercanos',
+    subtitle: 'Conéctate con tus vecinos de todo el mundo',
+    getStarted: 'Comenzar',
+    featuresTitle: 'Nuestras características',
+    feature1Title: 'Conoce a tus vecinos',
+    feature1Description: 'Descubre personas que viven cerca de ti, especialmente aquellas que comparten tu país de origen',
+    feature2Title: 'Eventos locales',
+    feature2Description: 'Crea y participa en eventos en tu vecindario',
+    feature3Title: 'Grupos de interés',
+    feature3Description: 'Únete a grupos basados en intereses comunes o tu país de origen',
     
-    home: "Inicio",
-    profile: "Perfil",
-    chats: "Chats",
-    spots: "Lugares",
-    logout: "Cerrar sesión",
+    // Authentification
+    email: 'Correo electrónico',
+    password: 'Contraseña',
+    confirmPassword: 'Confirmar contraseña',
+    name: 'Nombre',
+    forgotPassword: '¿Olvidaste tu contraseña?',
+    alreadyHaveAccount: '¿Ya tienes una cuenta?',
+    dontHaveAccount: '¿No tienes una cuenta?',
     
-    description: "Vecinos Cercanos ayuda a personas de origen extranjero a encontrar vecinos que comparten su cultura.",
-    community: "Comunidad",
-    privacy: "Privacidad",
-    terms: "Términos",
-    contact: "Contacto",
-    copyright: "© 2023 Vecinos Cercanos. Todos los derechos reservados.",
-    madeWith: "Hecho con ❤️ para todas las culturas",
-    language: "Idioma",
-    communitySpots: "Lugares comunitarios",
+    // Tableau de bord
+    welcomeBack: 'Bienvenido de nuevo',
+    nearbyNeighbors: 'Vecinos cercanos',
+    upcomingEvents: 'Próximos eventos',
+    newMessage: 'Nuevo mensaje',
+    noMessages: 'No hay mensajes',
     
-    searchRadius: "Radio de búsqueda",
-    searchAddress: "Buscar dirección",
+    // Profil
+    editProfile: 'Editar perfil',
+    bio: 'Biografía',
+    location: 'Ubicación',
+    save: 'Guardar',
+    cancel: 'Cancelar',
+    originCountry: 'País de origen',
     
-    createEvent: "Crear evento",
-    eventName: "Nombre del evento",
-    date: "Fecha",
-    time: "Hora",
-    description: "Descripción",
-    locationNote: "El evento se creará en tu ubicación actual",
-    cancel: "Cancelar",
+    // Carte
+    yourLocation: 'Tu ubicación',
+    searchRadius: 'Radio de búsqueda',
+    neighbors: 'Vecinos',
+    events: 'Eventos',
     
-    groups: "Grupos",
-    createGroup: "Crear grupo",
-    groupName: "Nombre del grupo",
-    groupDescription: "Descripción del grupo",
-    members: "Miembros",
-    joinGroup: "Unirse",
-    leaveGroup: "Salir",
-    myGroups: "Mis grupos"
+    // Messages
+    send: 'Enviar',
+    typeMessage: 'Escribe tu mensaje...',
+    
+    // Événements
+    createEvent: 'Crear evento',
+    eventName: 'Nombre del evento',
+    date: 'Fecha',
+    time: 'Hora',
+    description: 'Descripción',
+    locationNote: 'El evento se creará en tu ubicación actual en el mapa',
+    createdBy: 'Creado por',
+    
+    // Lieux communautaires
+    createSpot: 'Añadir lugar',
+    spotName: 'Nombre del lugar',
+    spotDescription: 'Descripción del lugar',
+    spotOriginRelated: 'Relacionado con el país de origen',
+    
+    // Groupes
+    createGroup: 'Crear grupo',
+    groupName: 'Nombre del grupo',
+    groupDescription: 'Descripción del grupo',
+    joinGroup: 'Unirse',
+    leaveGroup: 'Salir',
+    myGroups: 'Mis grupos',
+    availableGroups: 'Grupos disponibles',
+    members: 'Miembros',
+    member: 'Miembro',
+    admin: 'Admin',
+    
+    // Footer
+    about: 'Acerca de',
+    community: 'Comunidad',
+    privacy: 'Privacidad',
+    terms: 'Términos',
+    contact: 'Contacto',
+    copyright: '© 2023 Vecinos Cercanos. Todos los derechos reservados.',
+    madeWith: 'Hecho con ❤️',
   },
-  de: {
-    welcome: "Willkommen bei",
-    neighbors: "Nahe Nachbarn",
-    discover: "Entdecke, triff und verbinde dich mit Nachbarn, die deine Herkunft und Kultur teilen.",
-    signup: "Registrieren",
-    login: "Anmelden",
-    features: "Was wir bieten",
-    map: "Interaktive Karte",
-    mapDesc: "Visualisiere deine nahen Nachbarn auf einer Karte und filtere nach Herkunftsland.",
-    discoverNeighbors: "Nachbarn entdecken",
-    discoverNeighborsDesc: "Finde Menschen, die deine Kultur, Sprache oder dein Herkunftsland teilen.",
-    messaging: "Einfaches Messaging",
-    messagingDesc: "Verbinde dich und chatte direkt mit deinen neuen Nachbarn.",
-    
-    dashboard: "Dashboard",
-    messages: "Nachrichten",
-    backToConversations: "Zurück zu Gesprächen",
-    
-    home: "Startseite",
-    profile: "Profil",
-    chats: "Chats",
-    spots: "Orte",
-    logout: "Abmelden",
-    
-    description: "Nahe Nachbarn hilft Menschen ausländischer Herkunft, Nachbarn zu finden, die ihre Kultur teilen.",
-    community: "Gemeinschaft",
-    privacy: "Datenschutz",
-    terms: "Bedingungen",
-    contact: "Kontakt",
-    copyright: "© 2023 Nahe Nachbarn. Alle Rechte vorbehalten.",
-    madeWith: "Mit ❤️ für alle Kulturen gemacht",
-    language: "Sprache",
-    communitySpots: "Gemeinschaftsorte",
-    
-    searchRadius: "Suchradius",
-    searchAddress: "Adresse suchen",
-    
-    createEvent: "Veranstaltung erstellen",
-    eventName: "Name der Veranstaltung",
-    date: "Datum",
-    time: "Zeit",
-    description: "Beschreibung",
-    locationNote: "Die Veranstaltung wird an deinem aktuellen Standort erstellt",
-    cancel: "Abbrechen",
-    
-    groups: "Gruppen",
-    createGroup: "Gruppe erstellen",
-    groupName: "Gruppenname",
-    groupDescription: "Gruppenbeschreibung",
-    members: "Mitglieder",
-    joinGroup: "Beitreten",
-    leaveGroup: "Verlassen",
-    myGroups: "Meine Gruppen"
-  }
 };
 
-type LanguageContextType = {
-  language: LanguageType;
-  setLanguage: (lang: LanguageType) => void;
-  translations: TranslationType;
-};
-
+// Création du contexte
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
-export const useLanguage = () => {
-  const context = useContext(LanguageContext);
-  if (!context) {
-    throw new Error('useLanguage must be used within a LanguageProvider');
-  }
-  return context;
-};
-
-export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [language, setLanguage] = useState<LanguageType>('fr');
-  const { user } = useAuth();
+// Provider component
+export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [language, setLanguage] = useState<SupportedLanguage>('fr');
   
-  // Charger la préférence de langue depuis Supabase quand l'utilisateur est connecté
-  useEffect(() => {
-    const loadLanguagePreference = async () => {
-      if (user) {
-        try {
-          const { data, error } = await supabase
-            .from('users')
-            .select('ui_language')
-            .eq('id', user.id)
-            .single();
-          
-          if (data && data.ui_language && !error) {
-            setLanguage(data.ui_language as LanguageType);
-          }
-        } catch (error) {
-          console.error("Erreur lors du chargement de la préférence de langue:", error);
-        }
-      }
-    };
-    
-    loadLanguagePreference();
-  }, [user]);
+  const isRTL = language === 'ar';
   
-  // Sauvegarder la préférence de langue dans Supabase
-  const handleSetLanguage = async (lang: LanguageType) => {
-    setLanguage(lang);
-    
-    if (user) {
-      try {
-        await supabase
-          .from('users')
-          .update({ ui_language: lang })
-          .eq('id', user.id);
-      } catch (error) {
-        console.error("Erreur lors de la sauvegarde de la préférence de langue:", error);
-      }
-    }
-  };
-  
-  const value = {
-    language,
-    setLanguage: handleSetLanguage,
-    translations: translations[language]
-  };
-  
+  // Fournir le contexte à l'application
   return (
-    <LanguageContext.Provider value={value}>
+    <LanguageContext.Provider value={{
+      language,
+      setLanguage,
+      translations: translationsData[language],
+      isRTL,
+    }}>
       {children}
     </LanguageContext.Provider>
   );
+};
+
+// Hook personnalisé pour utiliser ce contexte
+export const useLanguage = () => {
+  const context = useContext(LanguageContext);
+  if (context === undefined) {
+    throw new Error('useLanguage must be used within a LanguageProvider');
+  }
+  return context;
 };
