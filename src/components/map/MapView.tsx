@@ -1,5 +1,6 @@
+
 import { useEffect, useState } from "react";
-import { MapContainer, TileLayer, Marker, Circle, Popup } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Circle, Popup, useMap } from "react-leaflet";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/context/LanguageContext";
 import { Flag, Calendar } from "lucide-react";
@@ -114,12 +115,12 @@ const MapView = ({ className = "", previewMode = false }: MapViewProps) => {
       <div className="w-full h-full min-h-[300px]">
         <MapContainer 
           style={{ height: "100%", width: "100%", borderRadius: "0.75rem" }}
-          center={mapCenter}
-          zoom={zoom}
+          initialCenter={mapCenter}
+          initialZoom={zoom}
         >
           <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           />
           
           <MapController center={mapCenter} zoom={zoom} />

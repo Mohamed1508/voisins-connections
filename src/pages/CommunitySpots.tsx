@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -63,7 +62,6 @@ const CommunitySpots = () => {
         
       if (error) throw error;
       
-      // Transform the data to match the CommunitySpot interface
       const transformedSpots = data.map((spot: any) => ({
         ...spot,
         creator_username: spot.users?.username
@@ -112,14 +110,12 @@ const CommunitySpots = () => {
         
       if (error) throw error;
       
-      // Get the username of the creator
       const { data: userData } = await supabase
         .from('users')
         .select('username')
         .eq('id', user.id)
         .single();
       
-      // Add the new spot to the state
       setSpots(prev => [{
         ...data,
         creator_username: userData?.username
@@ -156,7 +152,6 @@ const CommunitySpots = () => {
         
       if (error) throw error;
       
-      // Remove the deleted spot from the state
       setSpots(prev => prev.filter(spot => spot.id !== spotId));
       
       toast({
@@ -204,27 +199,24 @@ const CommunitySpots = () => {
           <div className="lg:col-span-2 rounded-lg overflow-hidden shadow-md h-[500px]">
             <MapContainer 
               style={{ height: "100%", width: "100%" }}
-              center={mapCenter}
-              zoom={zoom}
+              initialCenter={mapCenter}
+              initialZoom={zoom}
             >
               <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
               />
               
               <MapController center={mapCenter} zoom={zoom} />
               
-              {/* Position de l'utilisateur */}
               <Marker position={[userLocation.lat, userLocation.lng]}>
                 <Popup>Votre position</Popup>
               </Marker>
               
-              {/* Marqueurs des spots communautaires */}
               {spots.map((spot) => (
                 <Marker 
                   key={spot.id}
                   position={[spot.lat, spot.lng]}
-                  icon={DefaultIcon}
                 >
                   <Popup>
                     <div className="p-1">
@@ -297,7 +289,6 @@ const CommunitySpots = () => {
           </div>
         </div>
         
-        {/* Modal d'ajout de spot */}
         <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>

@@ -1,128 +1,116 @@
 
-import React from "react";
 import { Link } from "react-router-dom";
-import { Github, Heart, Twitter } from "lucide-react";
+import { MapPin, Heart } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
-import Logo from "../ui/Logo";
 
 const Footer = () => {
-  const { language } = useLanguage();
-
-  const translations = {
+  const { translations } = useLanguage();
+  
+  const footerTranslations = {
     fr: {
-      description: "Connectez-vous avec vos voisins et créez une communauté locale vivante.",
+      description: "Une application pour connecter les personnes partageant des origines similaires dans le même quartier.",
       community: "Communauté",
+      communitySpots: "Spots communautaires",
       privacy: "Confidentialité",
-      terms: "Conditions",
+      terms: "Conditions d'utilisation",
       contact: "Contact",
-      copyright: "© 2023 Voisins Proches. Tous droits réservés.",
+      copyright: "Tous droits réservés",
       madeWith: "Fait avec"
     },
     en: {
-      description: "Connect with your neighbors and create a vibrant local community.",
+      description: "An application to connect people with similar origins in the same neighborhood.",
       community: "Community",
+      communitySpots: "Community Spots",
       privacy: "Privacy",
-      terms: "Terms",
+      terms: "Terms of Service",
       contact: "Contact",
-      copyright: "© 2023 Voisins Proches. All rights reserved.",
+      copyright: "All rights reserved",
       madeWith: "Made with"
     },
     ar: {
-      description: "تواصل مع جيرانك وأنشئ مجتمعًا محليًا نابضًا بالحياة.",
+      description: "تطبيق لربط الأشخاص ذوي الأصول المتشابهة في نفس الحي.",
       community: "المجتمع",
+      communitySpots: "أماكن المجتمع",
       privacy: "الخصوصية",
-      terms: "الشروط",
-      contact: "تواصل معنا",
-      copyright: "© 2023 فوازان بروش. جميع الحقوق محفوظة.",
+      terms: "شروط الاستخدام",
+      contact: "اتصل بنا",
+      copyright: "جميع الحقوق محفوظة",
       madeWith: "صنع بـ"
     },
     es: {
-      description: "Conéctate con tus vecinos y crea una comunidad local vibrante.",
+      description: "Una aplicación para conectar personas con orígenes similares en el mismo barrio.",
       community: "Comunidad",
+      communitySpots: "Lugares comunitarios",
       privacy: "Privacidad",
-      terms: "Términos",
+      terms: "Términos de uso",
       contact: "Contacto",
-      copyright: "© 2023 Voisins Proches. Todos los derechos reservados.",
+      copyright: "Todos los derechos reservados",
       madeWith: "Hecho con"
     }
   };
-
-  const t = translations[language as keyof typeof translations];
-
+  
+  // Use the current language or fallback to French
+  const currentLanguage = translations.language || 'fr';
+  const t = footerTranslations[currentLanguage as keyof typeof footerTranslations];
+  
   return (
-    <footer className="bg-background border-t border-border py-12">
+    <footer className="bg-secondary py-10 mt-10">
       <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
-            <div className="flex items-center gap-2">
-              <Logo className="h-10 w-10" />
-              <div className="font-semibold text-xl">Voisins Proches</div>
+            <div className="flex items-center mb-4">
+              <MapPin className="h-5 w-5 text-primary mr-2" />
+              <span className="text-lg font-bold">Voisins Proches</span>
             </div>
-            <p className="mt-4 text-muted-foreground max-w-xs">
+            <p className="text-muted-foreground max-w-xs">
               {t.description}
             </p>
-            <div className="flex gap-4 mt-6">
-              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
-                <Twitter size={20} />
-              </a>
-              <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
-                <Github size={20} />
-              </a>
-            </div>
           </div>
           
           <div>
-            <h3 className="font-semibold text-lg mb-4">{t.community}</h3>
+            <h3 className="text-lg font-medium mb-4">{t.community}</h3>
             <ul className="space-y-2">
               <li>
-                <Link to="/dashboard" className="text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/dashboard" className="text-muted-foreground hover:text-foreground transition-colors">
                   Dashboard
                 </Link>
               </li>
               <li>
-                <Link to="/community-spots" className="text-muted-foreground hover:text-primary transition-colors">
-                  {translations[language as keyof typeof translations].communitySpots}
+                <Link to="/community-spots" className="text-muted-foreground hover:text-foreground transition-colors">
+                  {t.communitySpots}
                 </Link>
-              </li>
-              <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
-                  Blog
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
-                  FAQ
-                </a>
               </li>
             </ul>
           </div>
           
           <div>
-            <h3 className="font-semibold text-lg mb-4">{t.contact}</h3>
+            <h3 className="text-lg font-medium mb-4">{t.contact}</h3>
             <ul className="space-y-2">
               <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+                <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
                   {t.privacy}
                 </a>
               </li>
               <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+                <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
                   {t.terms}
                 </a>
               </li>
               <li>
-                <a href="mailto:contact@voisinsproches.org" className="text-muted-foreground hover:text-primary transition-colors">
-                  contact@voisinsproches.org
+                <a href="mailto:contact@voisinsproches.com" className="text-muted-foreground hover:text-foreground transition-colors">
+                  {t.contact}
                 </a>
               </li>
             </ul>
           </div>
         </div>
         
-        <div className="mt-10 pt-6 border-t border-border flex flex-col md:flex-row justify-between items-center">
-          <p className="text-sm text-muted-foreground">{t.copyright}</p>
+        <div className="border-t border-border mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
+          <p className="text-sm text-muted-foreground">
+            &copy; {new Date().getFullYear()} Voisins Proches. {t.copyright}.
+          </p>
           <p className="text-sm text-muted-foreground flex items-center mt-4 md:mt-0">
-            {t.madeWith} <Heart className="h-4 w-4 mx-1 text-red-500" /> Paris, France
+            {t.madeWith} <Heart className="h-4 w-4 text-red-500 mx-1" /> 
           </p>
         </div>
       </div>

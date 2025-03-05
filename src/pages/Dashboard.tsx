@@ -11,11 +11,11 @@ import Header from "@/components/layout/Header";
 import { useLanguage } from "@/context/LanguageContext";
 
 const Dashboard = () => {
-  const [selectedConversation, setSelectedConversation] = useState<number | null>(null);
+  const [selectedContact, setSelectedContact] = useState<number | null>(null);
   const { translations } = useLanguage();
 
-  const handleSelectConversation = (conversationId: number) => {
-    setSelectedConversation(conversationId);
+  const handleSelectConversation = (contactId: number) => {
+    setSelectedContact(contactId);
   };
 
   return (
@@ -49,16 +49,16 @@ const Dashboard = () => {
               </TabsContent>
               
               <TabsContent value="messages" className="border rounded-md mt-2">
-                {selectedConversation ? (
+                {selectedContact ? (
                   <div className="flex flex-col h-[400px]">
                     <button 
-                      onClick={() => setSelectedConversation(null)}
+                      onClick={() => setSelectedContact(null)}
                       className="p-2 text-sm text-primary hover:underline flex items-center"
                     >
                       ← {translations.backToConversations}
                     </button>
                     <Separator />
-                    <MessageBox conversationId={selectedConversation} />
+                    <MessageBox contactId={selectedContact} onBack={() => setSelectedContact(null)} />
                   </div>
                 ) : (
                   <ConversationList onSelectConversation={handleSelectConversation} />
