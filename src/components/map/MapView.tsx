@@ -417,7 +417,7 @@ const MapView: React.FC<MapViewProps> = ({
     const parisPosition: [number, number] = [48.8566, 2.3522];
     
     return (
-      <div className="relative">
+      <div className="relative w-full h-full">
         <MapContainer
           center={parisPosition}
           zoom={13}
@@ -446,30 +446,36 @@ const MapView: React.FC<MapViewProps> = ({
           {/* Sample neighbor */}
           <Marker position={[48.8566, 2.3522]} icon={DefaultIcon}>
             <Popup>
-              <div className="text-sm">
-                <p className="font-bold">Alice</p>
-                <p>2.1 km</p>
-              </div>
+              <NeighborCard 
+                neighbor={{
+                  id: 1,
+                  name: "Mohamed",
+                  distance: 0.2,
+                  origin_country: "Maroc",
+                  languages: ["français", "arabe"],
+                  interests: ["cuisine", "jardinage"],
+                  bio: "Bonjour! Je suis nouveau dans le quartier."
+                }}
+                detailed={true}
+              />
             </Popup>
           </Marker>
           
-          {/* Sample event */}
-          <Marker position={[48.8606, 2.3376]} icon={eventIcon}>
+          {/* Sample neighbor 2 */}
+          <Marker position={[48.8606, 2.3376]} icon={DefaultIcon}>
             <Popup>
-              <div className="text-sm">
-                <p className="font-bold">Community Meetup</p>
-                <p>Tomorrow • 18:00</p>
-              </div>
-            </Popup>
-          </Marker>
-          
-          {/* Sample group */}
-          <Marker position={[48.8526, 2.3395]} icon={groupIcon}>
-            <Popup>
-              <div className="text-sm">
-                <p className="font-bold">Neighborhood Watch</p>
-                <p className="text-xs">Local safety group</p>
-              </div>
+              <NeighborCard 
+                neighbor={{
+                  id: 2,
+                  name: "Fatma",
+                  distance: 1.2,
+                  origin_country: "Tunisie",
+                  languages: ["français", "arabe", "anglais"],
+                  interests: ["sport", "lecture"],
+                  bio: "Heureuse de rencontrer mes voisins!"
+                }}
+                detailed={true}
+              />
             </Popup>
           </Marker>
           
@@ -477,8 +483,9 @@ const MapView: React.FC<MapViewProps> = ({
           <Marker position={[48.8486, 2.3465]} icon={rideIcon}>
             <Popup>
               <div className="text-sm">
-                <p className="font-bold">Carpooling to City Center</p>
-                <p className="text-xs">3 seats available</p>
+                <p className="font-bold">Trajet centre-ville</p>
+                <p className="text-xs">Saint-Denis → Paris Centre</p>
+                <p className="text-xs">15/03/2024 • 3 places</p>
               </div>
             </Popup>
           </Marker>

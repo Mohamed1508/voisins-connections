@@ -76,7 +76,7 @@ const Index = () => {
             <FeatureCard 
               icon={<Car className="h-10 w-10 text-primary" />}
               title={translations.carpooling}
-              description={translations.carpoolingDesc || "Partagez des trajets avec vos voisins pour économiser et réduire votre empreinte carbone."}
+              description={translations.carpoolingDesc}
             />
           </div>
         </div>
