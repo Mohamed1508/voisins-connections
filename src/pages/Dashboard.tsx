@@ -1,8 +1,8 @@
-
-import React from "react";
+import React, { useEffect, useState } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { useLanguage } from "@/context/LanguageContext";
 import MapView from "@/components/map/MapView";
+import { useAuth } from "@/context/AuthContext";
 
 // Mock data for development
 const mockNeighbors = [
@@ -63,7 +63,27 @@ const mockRides = [
 // Dashboard component
 const Dashboard = () => {
   const { translations } = useLanguage();
-  const [selectedConversation, setSelectedConversation] = React.useState<number | null>(null);
+  const { user } = useAuth();
+  const [selectedConversation, setSelectedConversation] = useState<number | null>(null);
+  const [defaultLocation, setDefaultLocation] = useState({ lat: 48.8566, lng: 2.3522 });
+
+  // Check if user has a stored location
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setDefaultLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          });
+        },
+        (error) => {
+          console.log("Geolocation error or permission denied:", error);
+          // Keep default Paris location
+        }
+      );
+    }
+  }, []);
 
   return (
     <MainLayout>
@@ -72,12 +92,13 @@ const Dashboard = () => {
           <h2 className="text-2xl font-bold mb-4">{translations.map}</h2>
           <div className="h-[400px] rounded-lg overflow-hidden">
             <MapView 
-              userLocation={{ lat: 48.8566, lng: 2.3522 }}
+              userLocation={defaultLocation}
               neighbors={mockNeighbors}
               events={mockEvents}
               groups={mockGroups}
               rides={mockRides}
               withSearchBar={true}
+              askLocation={true}
             />
           </div>
         </div>
@@ -99,7 +120,7 @@ const Dashboard = () => {
               <div className="h-full overflow-auto">
                 {/* ConversationList would be here */}
                 <div className="text-center text-muted-foreground py-8">
-                  No active conversations
+                  {translations.noActiveConversations || "Aucune conversation active"}
                 </div>
               </div>
             )}

@@ -198,6 +198,48 @@ export type Database = {
           },
         ]
       }
+      rides: {
+        Row: {
+          arrival: string
+          available_seats: number
+          created_at: string
+          created_by: string
+          date: string
+          departure: string
+          id: string
+          lat: number
+          lng: number
+          name: string
+          time: string
+        }
+        Insert: {
+          arrival: string
+          available_seats?: number
+          created_at?: string
+          created_by: string
+          date: string
+          departure: string
+          id?: string
+          lat: number
+          lng: number
+          name: string
+          time: string
+        }
+        Update: {
+          arrival?: string
+          available_seats?: number
+          created_at?: string
+          created_by?: string
+          date?: string
+          departure?: string
+          id?: string
+          lat?: number
+          lng?: number
+          name?: string
+          time?: string
+        }
+        Relationships: []
+      }
       users: {
         Row: {
           avatar_url: string | null
