@@ -1,85 +1,163 @@
 
-import { Card, CardContent } from "@/components/ui/card";
+import React, { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { useAuth } from "@/context/AuthContext";
 import { useLanguage } from "@/context/LanguageContext";
+import { Calendar } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+
+const EventFormSchema = z.object({
+  name: z.string().min(3, {
+    message: "Name must be at least 3 characters.",
+  }),
+  date: z.string().min(1, {
+    message: "Date is required.",
+  }),
+  time: z.string().min(1, {
+    message: "Time is required.",
+  }),
+});
 
 interface EventFormProps {
-  onClose: () => void;
-  onSubmit: (event: { name: string; date: string; time: string; lat: number; lng: number }) => void;
-  defaultLocation: { lat: number; lng: number };
+  onCancel: () => void;
+  position: { lat: number; lng: number };
 }
 
-const EventForm = ({ onClose, onSubmit, defaultLocation }: EventFormProps) => {
-  const [newEvent, setNewEvent] = useState({ 
-    name: "", 
-    date: "", 
-    time: "", 
-    lat: defaultLocation.lat, 
-    lng: defaultLocation.lng 
-  });
-  
+const EventForm = ({ onCancel, position }: EventFormProps) => {
   const { translations } = useLanguage();
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSubmit(newEvent);
+  const form = useForm<z.infer<typeof EventFormSchema>>({
+    resolver: zodResolver(EventFormSchema),
+    defaultValues: {
+      name: "",
+      date: new Date().toISOString().split('T')[0],
+      time: "12:00",
+    },
+  });
+
+  const onSubmit = async (values: z.infer<typeof EventFormSchema>) => {
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "You must be logged in to create an event.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const { data, error } = await supabase.from("events").insert({
+        name: values.name,
+        date: values.date,
+        time: values.time,
+        created_by: user.id,
+        lat: position.lat,
+        lng: position.lng,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "Success",
+        description: "Event created successfully!",
+      });
+      onCancel();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create event",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <Card className="w-full max-w-md mx-4">
-        <CardContent className="p-6">
-          <h3 className="text-xl font-bold mb-4">{translations.createEvent}</h3>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">{translations.eventName}</label>
-              <input 
-                type="text" 
-                required
-                value={newEvent.name}
-                onChange={(e) => setNewEvent({...newEvent, name: e.target.value})}
-                className="w-full p-2 border rounded"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">{translations.date}</label>
-                <input 
-                  type="date" 
-                  required
-                  value={newEvent.date}
-                  onChange={(e) => setNewEvent({...newEvent, date: e.target.value})}
-                  className="w-full p-2 border rounded"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">{translations.time}</label>
-                <input 
-                  type="time" 
-                  required
-                  value={newEvent.time}
-                  onChange={(e) => setNewEvent({...newEvent, time: e.target.value})}
-                  className="w-full p-2 border rounded"
-                />
-              </div>
-            </div>
-            <div className="text-xs text-muted-foreground">{translations.locationNote}</div>
-            <div className="pt-2 flex justify-end gap-2">
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={onClose}
-              >
-                {translations.cancel}
-              </Button>
-              <Button type="submit">
-                {translations.createEvent}
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+    <div className="p-4 bg-card rounded-lg shadow-md">
+      <div className="flex items-center gap-2 mb-4">
+        <Calendar className="text-primary" size={24} />
+        <h3 className="text-xl font-bold">{translations.createEvent || "Create Event"}</h3>
+      </div>
+
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{translations.eventName || "Event Name"}</FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g., Community Meetup" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="date"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{translations.date || "Date"}</FormLabel>
+                <FormControl>
+                  <Input type="date" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="time"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{translations.time || "Time"}</FormLabel>
+                <FormControl>
+                  <Input type="time" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <p className="text-xs text-muted-foreground">
+            {translations.locationNote || "Click on the map to select a location"}
+          </p>
+
+          <div className="flex justify-between pt-2">
+            <Button type="button" variant="outline" onClick={onCancel}>
+              {translations.cancel || "Cancel"}
+            </Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {translations.createEvent || "Create Event"}
+            </Button>
+          </div>
+        </form>
+      </Form>
     </div>
   );
 };

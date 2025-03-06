@@ -11,7 +11,7 @@ import {
 import { Menu, X, User, MessageCircle, LogOut, MapPin, Users } from "lucide-react";
 import Logo from "@/components/ui/Logo";
 import { useAuth } from "@/context/AuthContext";
-import { useLanguage, LanguageType } from "@/context/LanguageContext";
+import { useLanguage, SupportedLanguage } from "@/context/LanguageContext";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -22,8 +22,8 @@ const Header = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
-  const handleLanguageChange = (newLang: string) => {
-    setLanguage(newLang as LanguageType);
+  const handleLanguageChange = (newLang: SupportedLanguage) => {
+    setLanguage(newLang);
   };
 
   return (
@@ -69,7 +69,7 @@ const Header = () => {
               </Link>
               <Link to="/signup">
                 <Button>
-                  {translations.signup}
+                  {translations.signUp}
                 </Button>
               </Link>
             </>
@@ -84,8 +84,8 @@ const Header = () => {
             <DropdownMenuContent>
               <DropdownMenuItem onClick={() => handleLanguageChange('fr')}>Français</DropdownMenuItem>
               <DropdownMenuItem onClick={() => handleLanguageChange('en')}>English</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleLanguageChange('ar')}>العربية</DropdownMenuItem>
               <DropdownMenuItem onClick={() => handleLanguageChange('es')}>Español</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleLanguageChange('de')}>Deutsch</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </nav>
@@ -172,7 +172,7 @@ const Header = () => {
                   className="py-2 hover:text-primary transition-colors"
                   onClick={toggleMenu}
                 >
-                  {translations.signup}
+                  {translations.signUp}
                 </Link>
               </>
             )}
@@ -201,6 +201,16 @@ const Header = () => {
                   EN
                 </Button>
                 <Button 
+                  variant={language === 'ar' ? 'default' : 'outline'} 
+                  size="sm"
+                  onClick={() => {
+                    handleLanguageChange('ar');
+                    toggleMenu();
+                  }}
+                >
+                  AR
+                </Button>
+                <Button 
                   variant={language === 'es' ? 'default' : 'outline'} 
                   size="sm"
                   onClick={() => {
@@ -209,16 +219,6 @@ const Header = () => {
                   }}
                 >
                   ES
-                </Button>
-                <Button 
-                  variant={language === 'de' ? 'default' : 'outline'} 
-                  size="sm"
-                  onClick={() => {
-                    handleLanguageChange('de');
-                    toggleMenu();
-                  }}
-                >
-                  DE
                 </Button>
               </div>
             </div>

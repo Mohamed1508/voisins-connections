@@ -1,9 +1,9 @@
+
 import React from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { useLanguage } from "@/context/LanguageContext";
 import MapView from "@/components/map/MapView";
 
-// Import other components as needed
 // Mock data for development
 const mockNeighbors = [
   {
@@ -36,6 +36,30 @@ const mockEvents = [
   }
 ];
 
+const mockGroups = [
+  {
+    id: "1",
+    name: "Neighborhood Watch",
+    description: "Local safety group",
+    lat: 48.8526,
+    lng: 2.3395,
+  }
+];
+
+const mockRides = [
+  {
+    id: "1",
+    name: "Carpooling to City Center",
+    departure: "Saint-Denis",
+    arrival: "Paris Center",
+    date: "2023-06-20",
+    availableSeats: 3,
+    lat: 48.8486,
+    lng: 2.3465,
+    createdBy: "David"
+  }
+];
+
 // Dashboard component
 const Dashboard = () => {
   const { translations } = useLanguage();
@@ -51,6 +75,9 @@ const Dashboard = () => {
               userLocation={{ lat: 48.8566, lng: 2.3522 }}
               neighbors={mockNeighbors}
               events={mockEvents}
+              groups={mockGroups}
+              rides={mockRides}
+              withSearchBar={true}
             />
           </div>
         </div>

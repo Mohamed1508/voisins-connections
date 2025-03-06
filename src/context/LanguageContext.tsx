@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useState, ReactNode } from "react";
 
-export type SupportedLanguage = "en" | "fr";
+export type SupportedLanguage = "en" | "fr" | "ar" | "es";
 
 type Translations = {
   welcome: string;
@@ -25,6 +25,35 @@ type Translations = {
   groups: string;
   communitySpots: string;
   dashboard: string;
+  profile: string;
+  logout: string;
+  cancel: string;
+  createEvent: string;
+  eventName: string;
+  date: string;
+  time: string;
+  locationNote: string;
+  createSpot: string;
+  spotName: string;
+  spotDescription: string;
+  spotOriginRelated: string;
+  createGroup: string;
+  groupName: string;
+  groupDescription: string;
+  myGroups: string;
+  availableGroups: string;
+  admin: string;
+  member: string;
+  leaveGroup: string;
+  joinGroup: string;
+  members: string;
+  searchRadius: string;
+  rides: string;
+  carpooling: string;
+  departure: string;
+  arrival: string;
+  availableSeats: string;
+  createRide: string;
 };
 
 const englishMessages: Translations = {
@@ -48,7 +77,36 @@ const englishMessages: Translations = {
   backToConversations: "Back to conversations",
   groups: "Groups",
   communitySpots: "Community Spots",
-  dashboard: "Dashboard"
+  dashboard: "Dashboard",
+  profile: "Profile",
+  logout: "Logout",
+  cancel: "Cancel",
+  createEvent: "Create Event",
+  eventName: "Event Name",
+  date: "Date",
+  time: "Time",
+  locationNote: "Click on the map to select a location",
+  createSpot: "Create Spot",
+  spotName: "Spot Name",
+  spotDescription: "Description",
+  spotOriginRelated: "Origin Related",
+  createGroup: "Create Group",
+  groupName: "Group Name",
+  groupDescription: "Group Description",
+  myGroups: "My Groups",
+  availableGroups: "Available Groups",
+  admin: "Admin",
+  member: "Member",
+  leaveGroup: "Leave Group",
+  joinGroup: "Join Group",
+  members: "Members",
+  searchRadius: "Search Radius",
+  rides: "Rides",
+  carpooling: "Carpooling",
+  departure: "Departure",
+  arrival: "Arrival",
+  availableSeats: "Available Seats",
+  createRide: "Create Ride"
 };
 
 const frenchMessages: Translations = {
@@ -72,12 +130,149 @@ const frenchMessages: Translations = {
   backToConversations: "Retour aux conversations",
   groups: "Groupes",
   communitySpots: "Lieux Communautaires",
-  dashboard: "Tableau de bord"
+  dashboard: "Tableau de bord",
+  profile: "Profil",
+  logout: "Déconnexion",
+  cancel: "Annuler",
+  createEvent: "Créer un Événement",
+  eventName: "Nom de l'Événement",
+  date: "Date",
+  time: "Heure",
+  locationNote: "Cliquez sur la carte pour sélectionner un emplacement",
+  createSpot: "Créer un Lieu",
+  spotName: "Nom du Lieu",
+  spotDescription: "Description",
+  spotOriginRelated: "Lié à l'Origine",
+  createGroup: "Créer un Groupe",
+  groupName: "Nom du Groupe",
+  groupDescription: "Description du Groupe",
+  myGroups: "Mes Groupes",
+  availableGroups: "Groupes Disponibles",
+  admin: "Administrateur",
+  member: "Membre",
+  leaveGroup: "Quitter le Groupe",
+  joinGroup: "Rejoindre le Groupe",
+  members: "Membres",
+  searchRadius: "Rayon de Recherche",
+  rides: "Trajets",
+  carpooling: "Covoiturage",
+  departure: "Départ",
+  arrival: "Arrivée",
+  availableSeats: "Places Disponibles",
+  createRide: "Créer un Trajet"
+};
+
+const arabicMessages: Translations = {
+  welcome: "مرحبا بكم في",
+  neighbors: "الجيران",
+  yourLocation: "موقعك",
+  createdBy: "تم الإنشاء بواسطة",
+  discover: "اكتشف وتواصل مع جيرانك في منطقتك. بناء مجتمع أقوى معا.",
+  features: "ميزاتنا",
+  map: "خريطة تفاعلية",
+  mapDesc: "استكشف حيك وابحث عن الأحداث والأماكن المجتمعية القريبة.",
+  discoverNeighbors: "اكتشف جيرانك",
+  discoverNeighborsDesc: "قابل وتواصل مع أشخاص يعيشون بالقرب منك بناءً على الاهتمامات المشتركة.",
+  messaging: "المراسلة المباشرة",
+  messagingDesc: "تواصل بشكل خاص مع جيرانك لتنظيم الأنشطة ومشاركة المعلومات.",
+  signUp: "التسجيل",
+  login: "تسجيل الدخول",
+  language: "اللغة",
+  chats: "المحادثات",
+  searchAddress: "البحث عن عنوان",
+  backToConversations: "العودة إلى المحادثات",
+  groups: "المجموعات",
+  communitySpots: "الأماكن المجتمعية",
+  dashboard: "لوحة التحكم",
+  profile: "الملف الشخصي",
+  logout: "تسجيل الخروج",
+  cancel: "إلغاء",
+  createEvent: "إنشاء حدث",
+  eventName: "اسم الحدث",
+  date: "التاريخ",
+  time: "الوقت",
+  locationNote: "انقر على الخريطة لتحديد موقع",
+  createSpot: "إنشاء مكان",
+  spotName: "اسم المكان",
+  spotDescription: "الوصف",
+  spotOriginRelated: "متعلق بالأصل",
+  createGroup: "إنشاء مجموعة",
+  groupName: "اسم المجموعة",
+  groupDescription: "وصف المجموعة",
+  myGroups: "مجموعاتي",
+  availableGroups: "المجموعات المتاحة",
+  admin: "مشرف",
+  member: "عضو",
+  leaveGroup: "مغادرة المجموعة",
+  joinGroup: "الانضمام إلى المجموعة",
+  members: "الأعضاء",
+  searchRadius: "نطاق البحث",
+  rides: "الرحلات",
+  carpooling: "مشاركة السيارة",
+  departure: "المغادرة",
+  arrival: "الوصول",
+  availableSeats: "المقاعد المتاحة",
+  createRide: "إنشاء رحلة"
+};
+
+const spanishMessages: Translations = {
+  welcome: "Bienvenido a",
+  neighbors: "Vecinos",
+  yourLocation: "Tu ubicación",
+  createdBy: "Creado por",
+  discover: "Descubre y conéctate con vecinos en tu área. Construye una comunidad más fuerte juntos.",
+  features: "Nuestras Características",
+  map: "Mapa Interactivo",
+  mapDesc: "Explora tu vecindario y encuentra eventos cercanos y lugares comunitarios.",
+  discoverNeighbors: "Descubre Vecinos",
+  discoverNeighborsDesc: "Conoce y conéctate con personas que viven cerca de ti según intereses compartidos.",
+  messaging: "Mensajería Directa",
+  messagingDesc: "Comunícate en privado con vecinos para organizar actividades y compartir información.",
+  signUp: "Registrarse",
+  login: "Iniciar Sesión",
+  language: "Idioma",
+  chats: "Chats",
+  searchAddress: "Buscar una dirección",
+  backToConversations: "Volver a conversaciones",
+  groups: "Grupos",
+  communitySpots: "Lugares Comunitarios",
+  dashboard: "Panel de Control",
+  profile: "Perfil",
+  logout: "Cerrar Sesión",
+  cancel: "Cancelar",
+  createEvent: "Crear Evento",
+  eventName: "Nombre del Evento",
+  date: "Fecha",
+  time: "Hora",
+  locationNote: "Haz clic en el mapa para seleccionar una ubicación",
+  createSpot: "Crear Lugar",
+  spotName: "Nombre del Lugar",
+  spotDescription: "Descripción",
+  spotOriginRelated: "Relacionado con Origen",
+  createGroup: "Crear Grupo",
+  groupName: "Nombre del Grupo",
+  groupDescription: "Descripción del Grupo",
+  myGroups: "Mis Grupos",
+  availableGroups: "Grupos Disponibles",
+  admin: "Administrador",
+  member: "Miembro",
+  leaveGroup: "Salir del Grupo",
+  joinGroup: "Unirse al Grupo",
+  members: "Miembros",
+  searchRadius: "Radio de Búsqueda",
+  rides: "Viajes",
+  carpooling: "Compartir Coche",
+  departure: "Salida",
+  arrival: "Llegada",
+  availableSeats: "Asientos Disponibles",
+  createRide: "Crear Viaje"
 };
 
 const messages = {
   en: englishMessages,
-  fr: frenchMessages
+  fr: frenchMessages,
+  ar: arabicMessages,
+  es: spanishMessages
 };
 
 interface LanguageContextType {

@@ -1,10 +1,10 @@
 
 import { Link } from "react-router-dom";
-import { MapPin, Heart } from "lucide-react";
+import { MapPin, Heart, Car, Users, MessageCircle } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 
 const Footer = () => {
-  const { translations } = useLanguage();
+  const { translations, language } = useLanguage();
   
   const footerTranslations = {
     fr: {
@@ -49,12 +49,12 @@ const Footer = () => {
     }
   };
   
-  // Use the current language or fallback to French
-  const currentLanguage = translations.language || 'fr';
-  const t = footerTranslations[currentLanguage as keyof typeof footerTranslations];
+  // Use the current language or fallback to English
+  const currentLanguage = language || 'en';
+  const t = footerTranslations[currentLanguage as keyof typeof footerTranslations] || footerTranslations.en;
   
   return (
-    <footer className="bg-secondary py-10 mt-10">
+    <footer className="bg-secondary py-10 mt-auto">
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
@@ -71,13 +71,33 @@ const Footer = () => {
             <h3 className="text-lg font-medium mb-4">{t.community}</h3>
             <ul className="space-y-2">
               <li>
-                <Link to="/dashboard" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Dashboard
+                <Link to="/dashboard" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2">
+                  <Map className="h-4 w-4" />
+                  {translations.dashboard}
                 </Link>
               </li>
               <li>
-                <Link to="/community-spots" className="text-muted-foreground hover:text-foreground transition-colors">
+                <Link to="/community-spots" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2">
+                  <MapPin className="h-4 w-4" />
                   {t.communitySpots}
+                </Link>
+              </li>
+              <li>
+                <Link to="/chat" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2">
+                  <MessageCircle className="h-4 w-4" />
+                  {translations.chats}
+                </Link>
+              </li>
+              <li>
+                <Link to="/groups" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2">
+                  <Users className="h-4 w-4" />
+                  {translations.groups}
+                </Link>
+              </li>
+              <li>
+                <Link to="/rides" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2">
+                  <Car className="h-4 w-4" />
+                  {translations.carpooling}
                 </Link>
               </li>
             </ul>

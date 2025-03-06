@@ -1,121 +1,92 @@
 
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React from "react";
+import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, User } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { useLanguage } from "@/context/LanguageContext";
 import Logo from "@/components/ui/Logo";
-import AuthModal from "@/components/auth/AuthModal";
+import { MapPin, MessageCircle, User, Map, Users, Car } from "lucide-react";
 
 const Navbar = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isAuthOpen, setIsAuthOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { user, signOut } = useAuth();
+  const { translations } = useLanguage();
+  const location = useLocation();
 
-  // Simule la connexion lorsque l'utilisateur se connecte via le modal
-  const handleAuthSuccess = () => {
-    setIsLoggedIn(true);
-    setIsAuthOpen(false);
+  const isActive = (path: string) => {
+    return location.pathname === path;
   };
 
+  const NavLink = ({ to, icon, label }: { to: string; icon: React.ReactNode; label: string }) => (
+    <Link
+      to={to}
+      className={`flex items-center gap-2 py-2 px-3 rounded-md transition-colors ${
+        isActive(to)
+          ? "bg-primary/10 text-primary font-medium"
+          : "text-muted-foreground hover:bg-secondary"
+      }`}
+    >
+      {icon}
+      <span>{label}</span>
+    </Link>
+  );
+
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-border bg-background/80 backdrop-blur-md">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
-        <Link to="/" className="flex items-center">
-          <Logo />
-        </Link>
+    <div className="bg-background border-b border-border sticky top-0 z-10">
+      <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Link to="/" className="flex items-center">
+            <Logo className="h-8 w-auto" />
+          </Link>
+        </div>
 
-        {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center space-x-6">
-          <Link to="/" className="text-sm font-medium transition-colors hover:text-primary">
-            Accueil
-          </Link>
-          <Link to="/neighbors" className="text-sm font-medium transition-colors hover:text-primary">
-            Voisins
-          </Link>
-          <Link to="/messages" className="text-sm font-medium transition-colors hover:text-primary">
-            Messages
-          </Link>
-          {isLoggedIn ? (
-            <Link to="/profile">
-              <Button variant="outline" size="sm" className="gap-2">
-                <User size={16} />
-                <span>Profil</span>
-              </Button>
-            </Link>
-          ) : (
-            <Button size="sm" onClick={() => setIsAuthOpen(true)}>
-              Se connecter
+        {user ? (
+          <nav className="flex items-center gap-1">
+            <NavLink
+              to="/dashboard"
+              icon={<Map size={18} />}
+              label={translations.dashboard}
+            />
+            <NavLink
+              to="/community-spots"
+              icon={<MapPin size={18} />}
+              label={translations.communitySpots}
+            />
+            <NavLink
+              to="/groups"
+              icon={<Users size={18} />}
+              label={translations.groups}
+            />
+            <NavLink
+              to="/rides"
+              icon={<Car size={18} />}
+              label={translations.rides}
+            />
+            <NavLink
+              to="/chat"
+              icon={<MessageCircle size={18} />}
+              label={translations.chats}
+            />
+            <NavLink
+              to={`/profile/${user.id}`}
+              icon={<User size={18} />}
+              label={translations.profile}
+            />
+            <Button variant="ghost" size="sm" onClick={() => signOut()}>
+              {translations.logout}
             </Button>
-          )}
-        </nav>
-
-        {/* Mobile Menu Button */}
-        <div className="md:hidden">
-          <Button variant="ghost" size="icon" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-            {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
-          </Button>
-        </div>
-      </div>
-
-      {/* Mobile Navigation Menu */}
-      {isMenuOpen && (
-        <div className="md:hidden bg-background border-b border-border animate-slide-in">
-          <div className="container mx-auto px-4 py-4 space-y-3">
-            <Link 
-              to="/" 
-              className="block py-2 text-base font-medium transition-colors hover:text-primary"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Accueil
+          </nav>
+        ) : (
+          <div className="flex items-center gap-2">
+            <Link to="/login">
+              <Button variant="outline" size="sm">{translations.login}</Button>
             </Link>
-            <Link 
-              to="/neighbors" 
-              className="block py-2 text-base font-medium transition-colors hover:text-primary"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Voisins
+            <Link to="/signup">
+              <Button size="sm">{translations.signUp}</Button>
             </Link>
-            <Link 
-              to="/messages" 
-              className="block py-2 text-base font-medium transition-colors hover:text-primary"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Messages
-            </Link>
-            {isLoggedIn ? (
-              <Link 
-                to="/profile" 
-                className="block py-2"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                <Button variant="outline" size="sm" className="w-full justify-start gap-2">
-                  <User size={16} />
-                  <span>Profil</span>
-                </Button>
-              </Link>
-            ) : (
-              <Button 
-                size="sm" 
-                className="w-full mt-2" 
-                onClick={() => {
-                  setIsMenuOpen(false);
-                  setIsAuthOpen(true);
-                }}
-              >
-                Se connecter
-              </Button>
-            )}
           </div>
-        </div>
-      )}
-
-      {/* Auth Modal */}
-      <AuthModal 
-        isOpen={isAuthOpen} 
-        onClose={() => setIsAuthOpen(false)} 
-        onSuccess={handleAuthSuccess} 
-      />
-    </header>
+        )}
+      </div>
+    </div>
   );
 };
 

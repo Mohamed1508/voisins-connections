@@ -16,6 +16,7 @@ import ProtectedRoute from "./components/auth/ProtectedRoute";
 import ChatPage from "./pages/ChatPage";
 import CommunitySpots from "./pages/CommunitySpots";
 import Groups from "./pages/Groups";
+import Rides from "./pages/Rides";
 
 const queryClient = new QueryClient();
 
@@ -67,6 +68,14 @@ const AppWithProviders = () => (
               element={
                 <ProtectedRoute>
                   <Groups />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/rides"
+              element={
+                <ProtectedRoute>
+                  <Rides />
                 </ProtectedRoute>
               }
             />

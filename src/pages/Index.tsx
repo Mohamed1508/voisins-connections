@@ -2,8 +2,9 @@
 import { Button } from "@/components/ui/button";
 import MapView from "@/components/map/MapView";
 import { Link } from "react-router-dom";
-import { UserPlus, MessageCircle, Map, Users } from "lucide-react";
+import { UserPlus, MessageCircle, Map, Users, Car } from "lucide-react";
 import Header from "@/components/layout/Header";
+import Footer from "@/components/layout/Footer";
 import { useLanguage } from "@/context/LanguageContext";
 
 const Index = () => {
@@ -45,6 +46,7 @@ const Index = () => {
                 userLocation={{ lat: 48.8566, lng: 2.3522 }}
                 neighbors={[]}
                 events={[]}
+                withSearchBar={true}
               />
             </div>
           </div>
@@ -55,7 +57,7 @@ const Index = () => {
       <section className="py-16 bg-secondary/50">
         <div className="container max-w-6xl mx-auto px-4 sm:px-6">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">{translations.features}</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <FeatureCard 
               icon={<Map className="h-10 w-10 text-primary" />}
               title={translations.map}
@@ -71,9 +73,16 @@ const Index = () => {
               title={translations.messaging}
               description={translations.messagingDesc}
             />
+            <FeatureCard 
+              icon={<Car className="h-10 w-10 text-primary" />}
+              title={translations.carpooling}
+              description="Share rides with your neighbors to save money and reduce your carbon footprint."
+            />
           </div>
         </div>
       </section>
+      
+      <Footer />
     </div>
   );
 };

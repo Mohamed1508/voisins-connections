@@ -58,6 +58,47 @@ type ExtendedDatabase = Database & {
           is_admin?: boolean;
         };
       };
+      rides: {
+        Row: {
+          id: string;
+          name: string;
+          departure: string;
+          arrival: string;
+          date: string;
+          time: string;
+          available_seats: number;
+          created_at: string;
+          created_by: string;
+          lat: number;
+          lng: number;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          departure: string;
+          arrival: string;
+          date: string;
+          time: string;
+          available_seats: number;
+          created_at?: string;
+          created_by: string;
+          lat: number;
+          lng: number;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          departure?: string;
+          arrival?: string;
+          date?: string;
+          time?: string;
+          available_seats?: number;
+          created_at?: string;
+          created_by?: string;
+          lat?: number;
+          lng?: number;
+        };
+      };
     };
   };
 };
