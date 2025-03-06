@@ -72,7 +72,7 @@ const Footer = () => {
             <ul className="space-y-2">
               <li>
                 <Link to="/dashboard" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2">
-                  <Map className="h-4 w-4" />
+                  <MapPin className="h-4 w-4" />
                   {translations.dashboard}
                 </Link>
               </li>

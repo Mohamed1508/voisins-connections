@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, ReactNode } from "react";
 
 export type SupportedLanguage = "en" | "fr" | "ar" | "es";
@@ -50,10 +49,21 @@ type Translations = {
   searchRadius: string;
   rides: string;
   carpooling: string;
+  carpoolingDesc: string;
   departure: string;
   arrival: string;
   availableSeats: string;
   createRide: string;
+  shareLocation: string;
+  shareLocationDesc: string;
+  allowLocation: string;
+  locationGranted: string;
+  locationGrantedDesc: string;
+  locationDenied: string;
+  locationDeniedDesc: string;
+  locationNotSupported: string;
+  locationNotSupportedDesc: string;
+  noActiveConversations: string;
 };
 
 const englishMessages: Translations = {
@@ -103,10 +113,17 @@ const englishMessages: Translations = {
   searchRadius: "Search Radius",
   rides: "Rides",
   carpooling: "Carpooling",
-  departure: "Departure",
-  arrival: "Arrival",
-  availableSeats: "Available Seats",
-  createRide: "Create Ride"
+  carpoolingDesc: "Share rides with your neighbors to save money and reduce your carbon footprint.",
+  shareLocation: "Share your location",
+  shareLocationDesc: "To see neighbors near you, we need your location.",
+  allowLocation: "Allow geolocation",
+  locationGranted: "Position shared",
+  locationGrantedDesc: "Your map is now centered on your position.",
+  locationDenied: "Location access denied",
+  locationDeniedDesc: "We can't show you nearby neighbors without your position.",
+  locationNotSupported: "Geolocation not supported",
+  locationNotSupportedDesc: "Your browser doesn't support geolocation.",
+  noActiveConversations: "No active conversations"
 };
 
 const frenchMessages: Translations = {
@@ -154,12 +171,19 @@ const frenchMessages: Translations = {
   joinGroup: "Rejoindre le Groupe",
   members: "Membres",
   searchRadius: "Rayon de Recherche",
-  rides: "Trajets",
-  carpooling: "Covoiturage",
-  departure: "Départ",
-  arrival: "Arrivée",
-  availableSeats: "Places Disponibles",
-  createRide: "Créer un Trajet"
+  rides: "Rides",
+  carpooling: "Carpooling",
+  carpoolingDesc: "Partagez des trajets avec vos voisins pour économiser et réduire votre empreinte carbone.",
+  shareLocation: "Partagez votre position",
+  shareLocationDesc: "Pour voir les voisins proches de vous, nous avons besoin de votre position.",
+  allowLocation: "Autoriser la géolocalisation",
+  locationGranted: "Position partagée",
+  locationGrantedDesc: "Votre carte est maintenant centrée sur votre position.",
+  locationDenied: "Accès à la position refusé",
+  locationDeniedDesc: "Nous ne pouvons pas vous montrer les voisins proches sans votre position.",
+  locationNotSupported: "Géolocalisation non supportée",
+  locationNotSupportedDesc: "Votre navigateur ne supporte pas la géolocalisation.",
+  noActiveConversations: "Pas de conversations actives"
 };
 
 const arabicMessages: Translations = {
@@ -209,10 +233,17 @@ const arabicMessages: Translations = {
   searchRadius: "نطاق البحث",
   rides: "الرحلات",
   carpooling: "مشاركة السيارة",
-  departure: "المغادرة",
-  arrival: "الوصول",
-  availableSeats: "المقاعد المتاحة",
-  createRide: "إنشاء رحلة"
+  carpoolingDesc: "شارك الرحلات مع جيرانك لتوفير المال وتقليل بصمتك الكربونية.",
+  shareLocation: "شارك موقعك",
+  shareLocationDesc: "لرؤية الجيران بالقرب منك، نحتاج إلى موقعك.",
+  allowLocation: "السماح بتحديد الموقع الجغرافي",
+  locationGranted: "تم مشاركة الموقع",
+  locationGrantedDesc: "تم تركيز الخريطة على موقعك الآن.",
+  locationDenied: "تم رفض الوصول إلى الموقع",
+  locationDeniedDesc: "لا يمكننا إظهار الجيران القريبين منك بدون موقعك.",
+  locationNotSupported: "تحديد الموقع الجغرافي غير مدعوم",
+  locationNotSupportedDesc: "متصفحك لا يدعم تحديد الموقع الجغرافي.",
+  noActiveConversations: "لا توجد محادثات نشطة"
 };
 
 const spanishMessages: Translations = {
@@ -262,10 +293,17 @@ const spanishMessages: Translations = {
   searchRadius: "Radio de Búsqueda",
   rides: "Viajes",
   carpooling: "Compartir Coche",
-  departure: "Salida",
-  arrival: "Llegada",
-  availableSeats: "Asientos Disponibles",
-  createRide: "Crear Viaje"
+  carpoolingDesc: "Comparte viajes con tus vecinos para ahorrar dinero y reducir tu huella de carbono.",
+  shareLocation: "Comparte tu ubicación",
+  shareLocationDesc: "Para ver a los vecinos cerca de ti, necesitamos tu ubicación.",
+  allowLocation: "Permitir geolocalización",
+  locationGranted: "Posición compartida",
+  locationGrantedDesc: "Tu mapa ahora está centrado en tu posición.",
+  locationDenied: "Acceso a la ubicación denegado",
+  locationDeniedDesc: "No podemos mostrarte vecinos cercanos sin tu posición.",
+  locationNotSupported: "Geolocalización no compatible",
+  locationNotSupportedDesc: "Tu navegador no es compatible con la geolocalización.",
+  noActiveConversations: "No hay conversaciones activas"
 };
 
 const messages = {

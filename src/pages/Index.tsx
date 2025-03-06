@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import MapView from "@/components/map/MapView";
 import { Link } from "react-router-dom";
-import { UserPlus, MessageCircle, Map, Users, Car } from "lucide-react";
+import { UserPlus, MessageCircle, Map as MapIcon, Users, Car } from "lucide-react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { useLanguage } from "@/context/LanguageContext";
@@ -59,7 +59,7 @@ const Index = () => {
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">{translations.features}</h2>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <FeatureCard 
-              icon={<Map className="h-10 w-10 text-primary" />}
+              icon={<MapIcon className="h-10 w-10 text-primary" />}
               title={translations.map}
               description={translations.mapDesc}
             />

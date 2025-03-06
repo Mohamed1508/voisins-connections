@@ -1,36 +1,51 @@
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
-import SignUp from "./pages/SignUp";
-import Login from "./pages/Login";
+import { useEffect } from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
+import "./App.css";
+
 import Dashboard from "./pages/Dashboard";
+import Index from "./pages/Index";
+import Login from "./pages/Login";
+import SignUp from "./pages/SignUp";
+import NotFound from "./pages/NotFound";
 import ProfilePage from "./pages/ProfilePage";
-import { LanguageProvider } from "./context/LanguageContext";
-import { AuthProvider } from "./context/AuthContext";
-import ProtectedRoute from "./components/auth/ProtectedRoute";
 import ChatPage from "./pages/ChatPage";
 import CommunitySpots from "./pages/CommunitySpots";
 import Groups from "./pages/Groups";
 import Rides from "./pages/Rides";
 
-const queryClient = new QueryClient();
+import { Toaster } from "@/components/ui/toaster";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
+import { AuthProvider } from "./context/AuthContext";
+import { LanguageProvider } from "./context/LanguageContext";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { seedDatabaseWithTestData } from "./utils/seedDatabaseWithTestData";
 
-const AppWithProviders = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
+// Create a client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+  },
+});
+
+function App() {
+  useEffect(() => {
+    // Seed database with test data for demonstration purposes
+    seedDatabaseWithTestData();
+  }, []);
+
+  return (
+    <QueryClientProvider client={queryClient}>
       <LanguageProvider>
         <AuthProvider>
-          <Toaster />
-          <Sonner />
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/signup" element={<SignUp />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<SignUp />} />
+
             <Route
               path="/dashboard"
               element={
@@ -40,7 +55,7 @@ const AppWithProviders = () => (
               }
             />
             <Route
-              path="/profile/:userId"
+              path="/profile"
               element={
                 <ProtectedRoute>
                   <ProfilePage />
@@ -48,7 +63,7 @@ const AppWithProviders = () => (
               }
             />
             <Route
-              path="/chat/:userId?"
+              path="/chat"
               element={
                 <ProtectedRoute>
                   <ChatPage />
@@ -79,19 +94,15 @@ const AppWithProviders = () => (
                 </ProtectedRoute>
               }
             />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
+
+            <Route path="/404" element={<NotFound />} />
+            <Route path="*" element={<Navigate to="/404" replace />} />
           </Routes>
+          <Toaster />
         </AuthProvider>
       </LanguageProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
-
-const App = () => (
-  <BrowserRouter>
-    <AppWithProviders />
-  </BrowserRouter>
-);
+    </QueryClientProvider>
+  );
+}
 
 export default App;

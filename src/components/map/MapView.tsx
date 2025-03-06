@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from "react-leaflet";
 import L from "leaflet";
@@ -11,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import LeafletProvider from "./LeafletProvider";
 
 // Default radius in km
 const DEFAULT_RADIUS = 2;
@@ -281,7 +281,6 @@ const MapView: React.FC<MapViewProps> = ({
     setSelectedNeighbor(neighborId === selectedNeighbor ? null : neighborId);
   };
 
-  // Update user location in database
   const updateUserLocation = async (position: {lat: number, lng: number}) => {
     if (!user) return;
     
@@ -300,7 +299,6 @@ const MapView: React.FC<MapViewProps> = ({
     }
   };
 
-  // Handle location granted
   const handleLocationGranted = (position: {lat: number, lng: number}) => {
     setUserRealLocation(position);
     setMapCenter([position.lat, position.lng]);
@@ -309,18 +307,15 @@ const MapView: React.FC<MapViewProps> = ({
     fetchNearbyUsers(position);
   };
 
-  // Fetch nearby users from the database
   const fetchNearbyUsers = async (center: {lat: number, lng: number}) => {
     if (!user) return;
     
     try {
-      // Calculate the bounding box for the search radius
       const R = 6371; // Earth's radius in km
       const lat = center.lat;
       const lng = center.lng;
       const radius = searchRadius; // in km
       
-      // Convert radius to degrees (approximate)
       const latDelta = (radius / R) * (180 / Math.PI);
       const lngDelta = (radius / R) * (180 / Math.PI) / Math.cos(lat * Math.PI / 180);
       
@@ -329,11 +324,10 @@ const MapView: React.FC<MapViewProps> = ({
       const lngMin = lng - lngDelta;
       const lngMax = lng + lngDelta;
       
-      // Query users within the bounding box
       const { data, error } = await supabase
         .from('users')
         .select('*')
-        .not('id', 'eq', user.id) // Exclude the current user
+        .not('id', 'eq', user.id)
         .gte('lat', latMin)
         .lte('lat', latMax)
         .gte('lng', lngMin)
@@ -342,7 +336,6 @@ const MapView: React.FC<MapViewProps> = ({
       if (error) throw error;
       
       if (data) {
-        // Calculate actual distance for each user
         const usersWithDistance = data.map(user => {
           const distance = calculateDistance(center.lat, center.lng, user.lat, user.lng);
           return {
@@ -351,7 +344,6 @@ const MapView: React.FC<MapViewProps> = ({
           };
         });
         
-        // Filter by actual distance and sort by distance
         const nearbyUsers = usersWithDistance
           .filter(user => user.distance <= radius)
           .sort((a, b) => a.distance - b.distance);
@@ -368,7 +360,6 @@ const MapView: React.FC<MapViewProps> = ({
     }
   };
 
-  // Calculate distance between two points using Haversine formula
   const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
     const R = 6371; // Earth's radius in km
     const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -381,7 +372,6 @@ const MapView: React.FC<MapViewProps> = ({
     return R * c; // Distance in km
   };
 
-  // If user is logged in, check for stored location and fetch nearby users
   useEffect(() => {
     if (user && !previewMode) {
       const checkUserLocation = async () => {
@@ -412,251 +402,272 @@ const MapView: React.FC<MapViewProps> = ({
     }
   }, [user, previewMode, askLocation]);
 
-  // If in preview mode, render a simplified map with mock data
   if (previewMode) {
     const parisPosition: [number, number] = [48.8566, 2.3522];
     
-    return (
-      <div className="relative w-full h-full">
-        <MapContainer
-          center={parisPosition}
-          zoom={13}
-          style={{ height: "100%", width: "100%", borderRadius: "0.5rem" }}
-          whenCreated={(map) => {
-            mapRef.current = map;
-          }}
-        >
-          <TileLayer
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          />
-          
-          {/* Demo circle for neighbors range */}
-          <Circle
-            center={parisPosition}
-            pathOptions={{
-              fillColor: "#3b82f6",
-              fillOpacity: 0.1,
-              color: "#3b82f6",
-              weight: 1,
-            }}
-            radius={500}
-          />
-          
-          {/* Sample neighbor */}
-          <Marker position={[48.8566, 2.3522]} icon={DefaultIcon}>
-            <Popup>
-              <NeighborCard 
-                neighbor={{
-                  id: 1,
-                  name: "Mohamed",
-                  distance: 0.2,
-                  origin_country: "Maroc",
-                  languages: ["français", "arabe"],
-                  interests: ["cuisine", "jardinage"],
-                  bio: "Bonjour! Je suis nouveau dans le quartier."
-                }}
-                detailed={true}
-              />
-            </Popup>
-          </Marker>
-          
-          {/* Sample neighbor 2 */}
-          <Marker position={[48.8606, 2.3376]} icon={DefaultIcon}>
-            <Popup>
-              <NeighborCard 
-                neighbor={{
-                  id: 2,
-                  name: "Fatma",
-                  distance: 1.2,
-                  origin_country: "Tunisie",
-                  languages: ["français", "arabe", "anglais"],
-                  interests: ["sport", "lecture"],
-                  bio: "Heureuse de rencontrer mes voisins!"
-                }}
-                detailed={true}
-              />
-            </Popup>
-          </Marker>
-          
-          {/* Sample ride */}
-          <Marker position={[48.8486, 2.3465]} icon={rideIcon}>
-            <Popup>
-              <div className="text-sm">
-                <p className="font-bold">Trajet centre-ville</p>
-                <p className="text-xs">Saint-Denis → Paris Centre</p>
-                <p className="text-xs">15/03/2024 • 3 places</p>
-              </div>
-            </Popup>
-          </Marker>
-          
-          {withSearchBar && <MapSearch />}
-          <AnimatedDemo />
-        </MapContainer>
-      </div>
-    );
-  }
-
-  return (
-    <div className="relative">
-      <MapContainer
-        center={mapCenter}
-        zoom={13}
-        style={{ height: "500px", width: "100%", borderRadius: "0.5rem" }}
-        whenCreated={(map) => {
+    const PreviewMap = () => (
+      <MapContainer 
+        center={parisPosition} 
+        zoom={13} 
+        style={{ height: "100%", width: "100%", borderRadius: "0.5rem" }}
+        whenCreated={(map: L.Map) => {
           mapRef.current = map;
         }}
       >
         <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-
-        {/* Center updater */}
-        <MapCenterUpdater center={mapCenter} />
-
-        {/* User marker */}
-        {userRealLocation ? (
-          <Marker position={[userRealLocation.lat, userRealLocation.lng]}>
-            <Popup>{translations.yourLocation || "Votre position"}</Popup>
-          </Marker>
-        ) : (
-          <Marker position={[userLocation.lat, userLocation.lng]}>
-            <Popup>{translations.yourLocation || "Votre position"}</Popup>
-          </Marker>
-        )}
-
-        {/* Search radius circle */}
+        
         <Circle
-          center={userRealLocation ? [userRealLocation.lat, userRealLocation.lng] : [userLocation.lat, userLocation.lng]}
+          center={parisPosition}
           pathOptions={{
             fillColor: "#3b82f6",
             fillOpacity: 0.1,
             color: "#3b82f6",
             weight: 1,
           }}
-          radius={kmToMeters(searchRadius)}
+          radius={kmToMeters(0.5)}
         />
-
-        {/* Event markers */}
-        {events.map((event) => (
-          <Marker
-            key={event.id}
-            position={[event.lat, event.lng]}
-            icon={eventIcon}
-            eventHandlers={{
-              click: () => onEventClick && onEventClick(event),
-            }}
-          >
-            <Popup>
-              <div className="text-sm">
-                <p className="font-bold">{event.name}</p>
-                <p>
-                  {event.date} • {event.time}
-                </p>
-                <p className="text-xs text-gray-600">{translations.createdBy || "Créé par"}: {event.createdBy}</p>
-              </div>
-            </Popup>
-          </Marker>
-        ))}
-
-        {/* If we have real neighbors from database, show them instead of mock data */}
-        {realNeighbors.length > 0 ? (
-          realNeighbors.map((neighbor) => (
-            <Marker
-              key={neighbor.id}
-              position={[neighbor.lat, neighbor.lng]}
-              icon={DefaultIcon}
-            >
-              <Popup className="neighbor-popup">
-                <NeighborCard neighbor={{
-                  id: neighbor.id,
-                  name: neighbor.username || "Voisin",
-                  distance: neighbor.distance,
-                  origin_country: neighbor.origin_country,
-                  languages: neighbor.languages,
-                  interests: neighbor.interests,
-                  bio: neighbor.bio
-                }} detailed={true} />
-              </Popup>
-            </Marker>
-          ))
-        ) : (
-          // Show mock neighbors if no real ones
-          neighbors.map((neighbor) => (
-            <Marker
-              key={neighbor.id}
-              position={[neighbor.lat, neighbor.lng]}
-              icon={DefaultIcon}
-            >
-              <Popup>
-                <NeighborCard neighbor={neighbor} />
-              </Popup>
-            </Marker>
-          ))
-        )}
-
-        {/* Community spot markers */}
-        {spots.map((spot) => (
-          <Marker
-            key={spot.id}
-            position={[spot.lat, spot.lng]}
-            icon={spotIcon}
-            eventHandlers={{
-              click: () => onSpotClick && onSpotClick(spot),
-            }}
-          >
-            <Popup>
-              <div className="text-sm">
-                <p className="font-bold">{spot.name}</p>
-                <p className="text-xs text-gray-600">{translations.createdBy || "Créé par"}: {spot.createdBy}</p>
-              </div>
-            </Popup>
-          </Marker>
-        ))}
-
-        {/* Group markers */}
-        {groups.map((group) => (
-          <Marker
-            key={group.id}
-            position={[group.lat, group.lng]}
-            icon={groupIcon}
-            eventHandlers={{
-              click: () => onGroupClick && onGroupClick(group),
-            }}
-          >
-            <Popup>
-              <div className="text-sm">
-                <p className="font-bold">{group.name}</p>
-                {group.description && <p className="text-xs">{group.description}</p>}
-              </div>
-            </Popup>
-          </Marker>
-        ))}
         
-        {/* Ride markers */}
-        {rides.map((ride) => (
-          <Marker
-            key={ride.id}
-            position={[ride.lat, ride.lng]}
-            icon={rideIcon}
-            eventHandlers={{
-              click: () => onRideClick && onRideClick(ride),
-            }}
-          >
-            <Popup>
-              <div className="text-sm">
-                <p className="font-bold">{ride.name}</p>
-                <p className="text-xs">{ride.departure} → {ride.arrival}</p>
-                <p className="text-xs">{ride.date} • {ride.availableSeats} places</p>
-                <p className="text-xs text-gray-600">{translations.createdBy || "Créé par"}: {ride.createdBy}</p>
-              </div>
-            </Popup>
-          </Marker>
-        ))}
+        <Marker 
+          position={[48.8566, 2.3522]} 
+          icon={DefaultIcon}
+        >
+          <Popup>
+            <NeighborCard 
+              neighbor={{
+                id: 1,
+                name: "Mohamed",
+                distance: 0.2,
+                origin_country: "Maroc",
+                languages: ["français", "arabe"],
+                interests: ["cuisine", "jardinage"],
+                bio: "Bonjour! Je suis nouveau dans le quartier."
+              }}
+              detailed={true}
+            />
+          </Popup>
+        </Marker>
+        
+        <Marker 
+          position={[48.8606, 2.3376]} 
+          icon={DefaultIcon}
+        >
+          <Popup>
+            <NeighborCard 
+              neighbor={{
+                id: 2,
+                name: "Fatma",
+                distance: 1.2,
+                origin_country: "Tunisie",
+                languages: ["français", "arabe", "anglais"],
+                interests: ["sport", "lecture"],
+                bio: "Heureuse de rencontrer mes voisins!"
+              }}
+              detailed={true}
+            />
+          </Popup>
+        </Marker>
+        
+        <Marker 
+          position={[48.8486, 2.3465]} 
+          icon={rideIcon}
+        >
+          <Popup>
+            <div className="text-sm">
+              <p className="font-bold">Trajet centre-ville</p>
+              <p className="text-xs">Saint-Denis → Paris Centre</p>
+              <p className="text-xs">15/03/2024 • 3 places</p>
+            </div>
+          </Popup>
+        </Marker>
         
         {withSearchBar && <MapSearch />}
+        <AnimatedDemo />
       </MapContainer>
+    );
+    
+    return (
+      <div className="relative w-full h-full">
+        <LeafletProvider fallback={
+          <div className="w-full h-full bg-secondary/20 flex items-center justify-center rounded-xl">
+            <div className="text-center p-4">
+              <p className="font-medium mb-2">Chargement de la carte...</p>
+              <p className="text-sm text-muted-foreground">Découvrez votre voisinage</p>
+            </div>
+          </div>
+        }>
+          <PreviewMap />
+        </LeafletProvider>
+      </div>
+    );
+  }
+
+  const RegularMap = () => (
+    <MapContainer
+      center={mapCenter}
+      zoom={13}
+      style={{ height: "500px", width: "100%", borderRadius: "0.5rem" }}
+      whenCreated={(map: L.Map) => {
+        mapRef.current = map;
+      }}
+    >
+      <TileLayer
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      />
+
+      <MapCenterUpdater center={mapCenter} />
+
+      {userRealLocation ? (
+        <Marker position={[userRealLocation.lat, userRealLocation.lng]}>
+          <Popup>{translations.yourLocation || "Votre position"}</Popup>
+        </Marker>
+      ) : (
+        <Marker position={[userLocation.lat, userLocation.lng]}>
+          <Popup>{translations.yourLocation || "Votre position"}</Popup>
+        </Marker>
+      )}
+
+      <Circle
+        center={userRealLocation ? [userRealLocation.lat, userRealLocation.lng] : [userLocation.lat, userLocation.lng]}
+        pathOptions={{
+          fillColor: "#3b82f6",
+          fillOpacity: 0.1,
+          color: "#3b82f6",
+          weight: 1,
+        }}
+        radius={kmToMeters(searchRadius)}
+      />
+
+      {events.map((event) => (
+        <Marker
+          key={event.id}
+          position={[event.lat, event.lng]}
+          icon={eventIcon}
+          eventHandlers={{
+            click: () => onEventClick && onEventClick(event),
+          }}
+        >
+          <Popup>
+            <div className="text-sm">
+              <p className="font-bold">{event.name}</p>
+              <p>
+                {event.date} • {event.time}
+              </p>
+              <p className="text-xs text-gray-600">{translations.createdBy || "Créé par"}: {event.createdBy}</p>
+            </div>
+          </Popup>
+        </Marker>
+      ))}
+
+      {realNeighbors.length > 0 ? (
+        realNeighbors.map((neighbor) => (
+          <Marker
+            key={neighbor.id}
+            position={[neighbor.lat, neighbor.lng]}
+            icon={DefaultIcon}
+          >
+            <Popup className="neighbor-popup">
+              <NeighborCard neighbor={{
+                id: neighbor.id,
+                name: neighbor.username || "Voisin",
+                distance: neighbor.distance,
+                origin_country: neighbor.origin_country,
+                languages: neighbor.languages,
+                interests: neighbor.interests,
+                bio: neighbor.bio
+              }} detailed={true} />
+            </Popup>
+          </Marker>
+        ))
+      ) : (
+        neighbors.map((neighbor) => (
+          <Marker
+            key={neighbor.id}
+            position={[neighbor.lat, neighbor.lng]}
+            icon={DefaultIcon}
+          >
+            <Popup>
+              <NeighborCard neighbor={neighbor} />
+            </Popup>
+          </Marker>
+        ))
+      )}
+
+      {spots.map((spot) => (
+        <Marker
+          key={spot.id}
+          position={[spot.lat, spot.lng]}
+          icon={spotIcon}
+          eventHandlers={{
+            click: () => onSpotClick && onSpotClick(spot),
+          }}
+        >
+          <Popup>
+            <div className="text-sm">
+              <p className="font-bold">{spot.name}</p>
+              <p className="text-xs text-gray-600">{translations.createdBy || "Créé par"}: {spot.createdBy}</p>
+            </div>
+          </Popup>
+        </Marker>
+      ))}
+
+      {groups.map((group) => (
+        <Marker
+          key={group.id}
+          position={[group.lat, group.lng]}
+          icon={groupIcon}
+          eventHandlers={{
+            click: () => onGroupClick && onGroupClick(group),
+          }}
+        >
+          <Popup>
+            <div className="text-sm">
+              <p className="font-bold">{group.name}</p>
+              {group.description && <p className="text-xs">{group.description}</p>}
+            </div>
+          </Popup>
+        </Marker>
+      ))}
+      
+      {rides.map((ride) => (
+        <Marker
+          key={ride.id}
+          position={[ride.lat, ride.lng]}
+          icon={rideIcon}
+          eventHandlers={{
+            click: () => onRideClick && onRideClick(ride),
+          }}
+        >
+          <Popup>
+            <div className="text-sm">
+              <p className="font-bold">{ride.name}</p>
+              <p className="text-xs">{ride.departure} → {ride.arrival}</p>
+              <p className="text-xs">{ride.date} • {ride.availableSeats} places</p>
+              <p className="text-xs text-gray-600">{translations.createdBy || "Créé par"}: {ride.createdBy}</p>
+            </div>
+          </Popup>
+        </Marker>
+      ))}
+      
+      {withSearchBar && <MapSearch />}
+    </MapContainer>
+  );
+  
+  return (
+    <div className="relative">
+      <LeafletProvider fallback={
+        <div className="w-full h-[500px] bg-secondary/20 flex items-center justify-center rounded-xl">
+          <div className="text-center p-4">
+            <p className="font-medium mb-2">Chargement de la carte...</p>
+            <p className="text-sm text-muted-foreground">Découvrez votre voisinage</p>
+          </div>
+        </div>
+      }>
+        <RegularMap />
+      </LeafletProvider>
       
       {showLocationRequest && (
         <LocationRequest onLocationGranted={handleLocationGranted} />
