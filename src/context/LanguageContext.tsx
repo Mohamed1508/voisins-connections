@@ -1,8 +1,8 @@
+
 import React, { createContext, useContext, useState, ReactNode } from "react";
 
-export type SupportedLanguage = "en" | "fr" | "ar" | "es";
-
-type Translations = {
+// Define the shape of translations
+interface Translations {
   welcome: string;
   neighbors: string;
   yourLocation: string;
@@ -13,47 +13,41 @@ type Translations = {
   mapDesc: string;
   discoverNeighbors: string;
   discoverNeighborsDesc: string;
-  messaging: string;
-  messagingDesc: string;
-  signUp: string;
+  createEvents: string;
+  createEventsDesc: string;
+  createGroups: string;
+  createGroupsDesc: string;
+  joinRides: string;
+  joinRidesDesc: string;
   login: string;
-  language: string;
-  chats: string;
-  searchAddress: string;
-  backToConversations: string;
-  groups: string;
-  communitySpots: string;
+  signup: string;
+  logout: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  createAccount: string;
+  alreadyHaveAccount: string;
+  dontHaveAccount: string;
+  username: string;
+  profileUpdated: string;
+  errorUpdatingProfile: string;
   dashboard: string;
   profile: string;
-  logout: string;
-  cancel: string;
-  createEvent: string;
-  eventName: string;
-  date: string;
-  time: string;
-  locationNote: string;
-  createSpot: string;
-  spotName: string;
-  spotDescription: string;
-  spotOriginRelated: string;
-  createGroup: string;
-  groupName: string;
-  groupDescription: string;
-  myGroups: string;
-  availableGroups: string;
-  admin: string;
-  member: string;
-  leaveGroup: string;
-  joinGroup: string;
-  members: string;
-  searchRadius: string;
+  chat: string;
+  events: string;
+  groups: string;
   rides: string;
-  carpooling: string;
-  carpoolingDesc: string;
-  departure: string;
-  arrival: string;
-  availableSeats: string;
-  createRide: string;
+  createEvent: string;
+  myProfile: string;
+  editProfile: string;
+  languages: string;
+  interests: string;
+  bio: string;
+  saveChanges: string;
+  cancel: string;
+  origin: string;
+  joinGroup: string;
+  leaveGroup: string;
   shareLocation: string;
   shareLocationDesc: string;
   allowLocation: string;
@@ -63,282 +57,300 @@ type Translations = {
   locationDeniedDesc: string;
   locationNotSupported: string;
   locationNotSupportedDesc: string;
+  backToConversations: string;
   noActiveConversations: string;
-};
+  // Add new translation keys for rides
+  departure: string;
+  arrival: string;
+  availableSeats: string;
+  createRide: string;
+}
 
-const englishMessages: Translations = {
-  welcome: "Welcome to",
-  neighbors: "Neighbors",
-  yourLocation: "Your location",
-  createdBy: "Created by",
-  discover: "Discover and connect with neighbors in your area. Build a stronger community together.",
-  features: "Our Features",
-  map: "Interactive Map",
-  mapDesc: "Explore your neighborhood and find nearby events and community spots.",
-  discoverNeighbors: "Discover Neighbors",
-  discoverNeighborsDesc: "Meet and connect with people living near you based on shared interests.",
-  messaging: "Direct Messaging",
-  messagingDesc: "Communicate privately with neighbors to organize activities and share information.",
-  signUp: "Sign Up",
-  login: "Login",
-  language: "Language",
-  chats: "Chats",
-  searchAddress: "Search an address",
-  backToConversations: "Back to conversations",
-  groups: "Groups",
-  communitySpots: "Community Spots",
-  dashboard: "Dashboard",
-  profile: "Profile",
-  logout: "Logout",
-  cancel: "Cancel",
-  createEvent: "Create Event",
-  eventName: "Event Name",
-  date: "Date",
-  time: "Time",
-  locationNote: "Click on the map to select a location",
-  createSpot: "Create Spot",
-  spotName: "Spot Name",
-  spotDescription: "Description",
-  spotOriginRelated: "Origin Related",
-  createGroup: "Create Group",
-  groupName: "Group Name",
-  groupDescription: "Group Description",
-  myGroups: "My Groups",
-  availableGroups: "Available Groups",
-  admin: "Admin",
-  member: "Member",
-  leaveGroup: "Leave Group",
-  joinGroup: "Join Group",
-  members: "Members",
-  searchRadius: "Search Radius",
-  rides: "Rides",
-  carpooling: "Carpooling",
-  carpoolingDesc: "Share rides with your neighbors to save money and reduce your carbon footprint.",
-  shareLocation: "Share your location",
-  shareLocationDesc: "To see neighbors near you, we need your location.",
-  allowLocation: "Allow geolocation",
-  locationGranted: "Position shared",
-  locationGrantedDesc: "Your map is now centered on your position.",
-  locationDenied: "Location access denied",
-  locationDeniedDesc: "We can't show you nearby neighbors without your position.",
-  locationNotSupported: "Geolocation not supported",
-  locationNotSupportedDesc: "Your browser doesn't support geolocation.",
-  noActiveConversations: "No active conversations"
-};
-
-const frenchMessages: Translations = {
-  welcome: "Bienvenue sur",
-  neighbors: "Voisins",
-  yourLocation: "Votre position",
-  createdBy: "Créé par",
-  discover: "Découvrez et connectez-vous avec vos voisins. Construisez une communauté plus forte ensemble.",
-  features: "Nos Fonctionnalités",
-  map: "Carte Interactive",
-  mapDesc: "Explorez votre quartier et trouvez des événements et des lieux communautaires à proximité.",
-  discoverNeighbors: "Découvrir vos Voisins",
-  discoverNeighborsDesc: "Rencontrez des personnes vivant près de chez vous selon vos intérêts communs.",
-  messaging: "Messagerie Directe",
-  messagingDesc: "Communiquez en privé avec vos voisins pour organiser des activités et partager des informations.",
-  signUp: "S'inscrire",
-  login: "Connexion",
-  language: "Langue",
-  chats: "Messages",
-  searchAddress: "Rechercher une adresse",
-  backToConversations: "Retour aux conversations",
-  groups: "Groupes",
-  communitySpots: "Lieux Communautaires",
-  dashboard: "Tableau de bord",
-  profile: "Profil",
-  logout: "Déconnexion",
-  cancel: "Annuler",
-  createEvent: "Créer un Événement",
-  eventName: "Nom de l'Événement",
-  date: "Date",
-  time: "Heure",
-  locationNote: "Cliquez sur la carte pour sélectionner un emplacement",
-  createSpot: "Créer un Lieu",
-  spotName: "Nom du Lieu",
-  spotDescription: "Description",
-  spotOriginRelated: "Lié à l'Origine",
-  createGroup: "Créer un Groupe",
-  groupName: "Nom du Groupe",
-  groupDescription: "Description du Groupe",
-  myGroups: "Mes Groupes",
-  availableGroups: "Groupes Disponibles",
-  admin: "Administrateur",
-  member: "Membre",
-  leaveGroup: "Quitter le Groupe",
-  joinGroup: "Rejoindre le Groupe",
-  members: "Membres",
-  searchRadius: "Rayon de Recherche",
-  rides: "Rides",
-  carpooling: "Carpooling",
-  carpoolingDesc: "Partagez des trajets avec vos voisins pour économiser et réduire votre empreinte carbone.",
-  shareLocation: "Partagez votre position",
-  shareLocationDesc: "Pour voir les voisins proches de vous, nous avons besoin de votre position.",
-  allowLocation: "Autoriser la géolocalisation",
-  locationGranted: "Position partagée",
-  locationGrantedDesc: "Votre carte est maintenant centrée sur votre position.",
-  locationDenied: "Accès à la position refusé",
-  locationDeniedDesc: "Nous ne pouvons pas vous montrer les voisins proches sans votre position.",
-  locationNotSupported: "Géolocalisation non supportée",
-  locationNotSupportedDesc: "Votre navigateur ne supporte pas la géolocalisation.",
-  noActiveConversations: "Pas de conversations actives"
-};
-
-const arabicMessages: Translations = {
-  welcome: "مرحبا بكم في",
-  neighbors: "الجيران",
-  yourLocation: "موقعك",
-  createdBy: "تم الإنشاء بواسطة",
-  discover: "اكتشف وتواصل مع جيرانك في منطقتك. بناء مجتمع أقوى معا.",
-  features: "ميزاتنا",
-  map: "خريطة تفاعلية",
-  mapDesc: "استكشف حيك وابحث عن الأحداث والأماكن المجتمعية القريبة.",
-  discoverNeighbors: "اكتشف جيرانك",
-  discoverNeighborsDesc: "قابل وتواصل مع أشخاص يعيشون بالقرب منك بناءً على الاهتمامات المشتركة.",
-  messaging: "المراسلة المباشرة",
-  messagingDesc: "تواصل بشكل خاص مع جيرانك لتنظيم الأنشطة ومشاركة المعلومات.",
-  signUp: "التسجيل",
-  login: "تسجيل الدخول",
-  language: "اللغة",
-  chats: "المحادثات",
-  searchAddress: "البحث عن عنوان",
-  backToConversations: "العودة إلى المحادثات",
-  groups: "المجموعات",
-  communitySpots: "الأماكن المجتمعية",
-  dashboard: "لوحة التحكم",
-  profile: "الملف الشخصي",
-  logout: "تسجيل الخروج",
-  cancel: "إلغاء",
-  createEvent: "إنشاء حدث",
-  eventName: "اسم الحدث",
-  date: "التاريخ",
-  time: "الوقت",
-  locationNote: "انقر على الخريطة لتحديد موقع",
-  createSpot: "إنشاء مكان",
-  spotName: "اسم المكان",
-  spotDescription: "الوصف",
-  spotOriginRelated: "متعلق بالأصل",
-  createGroup: "إنشاء مجموعة",
-  groupName: "اسم المجموعة",
-  groupDescription: "وصف المجموعة",
-  myGroups: "مجموعاتي",
-  availableGroups: "المجموعات المتاحة",
-  admin: "مشرف",
-  member: "عضو",
-  leaveGroup: "مغادرة المجموعة",
-  joinGroup: "الانضمام إلى المجموعة",
-  members: "الأعضاء",
-  searchRadius: "نطاق البحث",
-  rides: "الرحلات",
-  carpooling: "مشاركة السيارة",
-  carpoolingDesc: "شارك الرحلات مع جيرانك لتوفير المال وتقليل بصمتك الكربونية.",
-  shareLocation: "شارك موقعك",
-  shareLocationDesc: "لرؤية الجيران بالقرب منك، نحتاج إلى موقعك.",
-  allowLocation: "السماح بتحديد الموقع الجغرافي",
-  locationGranted: "تم مشاركة الموقع",
-  locationGrantedDesc: "تم تركيز الخريطة على موقعك الآن.",
-  locationDenied: "تم رفض الوصول إلى الموقع",
-  locationDeniedDesc: "لا يمكننا إظهار الجيران القريبين منك بدون موقعك.",
-  locationNotSupported: "تحديد الموقع الجغرافي غير مدعوم",
-  locationNotSupportedDesc: "متصفحك لا يدعم تحديد الموقع الجغرافي.",
-  noActiveConversations: "لا توجد محادثات نشطة"
-};
-
-const spanishMessages: Translations = {
-  welcome: "Bienvenido a",
-  neighbors: "Vecinos",
-  yourLocation: "Tu ubicación",
-  createdBy: "Creado por",
-  discover: "Descubre y conéctate con vecinos en tu área. Construye una comunidad más fuerte juntos.",
-  features: "Nuestras Características",
-  map: "Mapa Interactivo",
-  mapDesc: "Explora tu vecindario y encuentra eventos cercanos y lugares comunitarios.",
-  discoverNeighbors: "Descubre Vecinos",
-  discoverNeighborsDesc: "Conoce y conéctate con personas que viven cerca de ti según intereses compartidos.",
-  messaging: "Mensajería Directa",
-  messagingDesc: "Comunícate en privado con vecinos para organizar actividades y compartir información.",
-  signUp: "Registrarse",
-  login: "Iniciar Sesión",
-  language: "Idioma",
-  chats: "Chats",
-  searchAddress: "Buscar una dirección",
-  backToConversations: "Volver a conversaciones",
-  groups: "Grupos",
-  communitySpots: "Lugares Comunitarios",
-  dashboard: "Panel de Control",
-  profile: "Perfil",
-  logout: "Cerrar Sesión",
-  cancel: "Cancelar",
-  createEvent: "Crear Evento",
-  eventName: "Nombre del Evento",
-  date: "Fecha",
-  time: "Hora",
-  locationNote: "Haz clic en el mapa para seleccionar una ubicación",
-  createSpot: "Crear Lugar",
-  spotName: "Nombre del Lugar",
-  spotDescription: "Descripción",
-  spotOriginRelated: "Relacionado con Origen",
-  createGroup: "Crear Grupo",
-  groupName: "Nombre del Grupo",
-  groupDescription: "Descripción del Grupo",
-  myGroups: "Mis Grupos",
-  availableGroups: "Grupos Disponibles",
-  admin: "Administrador",
-  member: "Miembro",
-  leaveGroup: "Salir del Grupo",
-  joinGroup: "Unirse al Grupo",
-  members: "Miembros",
-  searchRadius: "Radio de Búsqueda",
-  rides: "Viajes",
-  carpooling: "Compartir Coche",
-  carpoolingDesc: "Comparte viajes con tus vecinos para ahorrar dinero y reducir tu huella de carbono.",
-  shareLocation: "Comparte tu ubicación",
-  shareLocationDesc: "Para ver a los vecinos cerca de ti, necesitamos tu ubicación.",
-  allowLocation: "Permitir geolocalización",
-  locationGranted: "Posición compartida",
-  locationGrantedDesc: "Tu mapa ahora está centrado en tu posición.",
-  locationDenied: "Acceso a la ubicación denegado",
-  locationDeniedDesc: "No podemos mostrarte vecinos cercanos sin tu posición.",
-  locationNotSupported: "Geolocalización no compatible",
-  locationNotSupportedDesc: "Tu navegador no es compatible con la geolocalización.",
-  noActiveConversations: "No hay conversaciones activas"
-};
-
-const messages = {
-  en: englishMessages,
-  fr: frenchMessages,
-  ar: arabicMessages,
-  es: spanishMessages
-};
-
+// Define the shape of our context
 interface LanguageContextType {
-  language: SupportedLanguage;
-  setLanguage: (lang: SupportedLanguage) => void;
+  language: string;
+  setLanguage: (lang: string) => void;
   translations: Translations;
 }
 
+// Create the context with a default value
 const LanguageContext = createContext<LanguageContextType>({
-  language: "en",
+  language: "fr",
   setLanguage: () => {},
-  translations: englishMessages,
+  translations: {} as Translations,
 });
 
+// Define available languages and their translations
+const availableLanguages = ["fr", "en", "ar", "es"];
+
+const translationsByLanguage: Record<string, Translations> = {
+  fr: {
+    welcome: "Bienvenue sur Voisin",
+    neighbors: "Voisins",
+    yourLocation: "Votre position",
+    createdBy: "Créé par",
+    discover: "Découvrez vos voisins",
+    features: "Fonctionnalités",
+    map: "Carte",
+    mapDesc: "Explorez votre quartier et découvrez vos voisins",
+    discoverNeighbors: "Découvrez vos voisins",
+    discoverNeighborsDesc: "Connectez-vous avec des personnes de votre quartier",
+    createEvents: "Créez des événements",
+    createEventsDesc: "Organisez des événements locaux et invitez vos voisins",
+    createGroups: "Créez des groupes",
+    createGroupsDesc: "Formez des communautés autour d'intérêts communs",
+    joinRides: "Covoiturage",
+    joinRidesDesc: "Partagez vos trajets quotidiens avec vos voisins",
+    login: "Connexion",
+    signup: "Inscription",
+    logout: "Déconnexion",
+    email: "Email",
+    password: "Mot de passe",
+    confirmPassword: "Confirmer le mot de passe",
+    createAccount: "Créer un compte",
+    alreadyHaveAccount: "Vous avez déjà un compte?",
+    dontHaveAccount: "Vous n'avez pas de compte?",
+    username: "Nom d'utilisateur",
+    profileUpdated: "Profil mis à jour",
+    errorUpdatingProfile: "Erreur lors de la mise à jour du profil",
+    dashboard: "Tableau de bord",
+    profile: "Profil",
+    chat: "Messages",
+    events: "Événements",
+    groups: "Groupes",
+    rides: "Covoiturage",
+    createEvent: "Créer un événement",
+    myProfile: "Mon profil",
+    editProfile: "Modifier le profil",
+    languages: "Langues",
+    interests: "Centres d'intérêt",
+    bio: "Bio",
+    saveChanges: "Enregistrer",
+    cancel: "Annuler",
+    origin: "Pays d'origine",
+    joinGroup: "Rejoindre le groupe",
+    leaveGroup: "Quitter le groupe",
+    shareLocation: "Partagez votre position",
+    shareLocationDesc: "Pour voir les voisins proches de vous, nous avons besoin de votre position.",
+    allowLocation: "Autoriser la géolocalisation",
+    locationGranted: "Position partagée",
+    locationGrantedDesc: "Votre carte est maintenant centrée sur votre position.",
+    locationDenied: "Accès à la position refusé",
+    locationDeniedDesc: "Nous ne pouvons pas vous montrer les voisins proches sans votre position.",
+    locationNotSupported: "Géolocalisation non supportée",
+    locationNotSupportedDesc: "Votre navigateur ne supporte pas la géolocalisation.",
+    backToConversations: "Retour aux conversations",
+    noActiveConversations: "Aucune conversation active",
+    // Add new translation keys for rides
+    departure: "Départ",
+    arrival: "Arrivée",
+    availableSeats: "Places disponibles",
+    createRide: "Créer un trajet"
+  },
+  en: {
+    welcome: "Welcome to Voisin",
+    neighbors: "Neighbors",
+    yourLocation: "Your location",
+    createdBy: "Created by",
+    discover: "Discover your neighbors",
+    features: "Features",
+    map: "Map",
+    mapDesc: "Explore your neighborhood and discover your neighbors",
+    discoverNeighbors: "Discover your neighbors",
+    discoverNeighborsDesc: "Connect with people in your neighborhood",
+    createEvents: "Create events",
+    createEventsDesc: "Organize local events and invite your neighbors",
+    createGroups: "Create groups",
+    createGroupsDesc: "Form communities around common interests",
+    joinRides: "Carpooling",
+    joinRidesDesc: "Share your daily commute with your neighbors",
+    login: "Login",
+    signup: "Sign Up",
+    logout: "Logout",
+    email: "Email",
+    password: "Password",
+    confirmPassword: "Confirm Password",
+    createAccount: "Create Account",
+    alreadyHaveAccount: "Already have an account?",
+    dontHaveAccount: "Don't have an account?",
+    username: "Username",
+    profileUpdated: "Profile updated",
+    errorUpdatingProfile: "Error updating profile",
+    dashboard: "Dashboard",
+    profile: "Profile",
+    chat: "Messages",
+    events: "Events",
+    groups: "Groups",
+    rides: "Rides",
+    createEvent: "Create Event",
+    myProfile: "My Profile",
+    editProfile: "Edit Profile",
+    languages: "Languages",
+    interests: "Interests",
+    bio: "Bio",
+    saveChanges: "Save Changes",
+    cancel: "Cancel",
+    origin: "Country of Origin",
+    joinGroup: "Join Group",
+    leaveGroup: "Leave Group",
+    shareLocation: "Share your location",
+    shareLocationDesc: "To see neighbors near you, we need your location.",
+    allowLocation: "Allow Geolocation",
+    locationGranted: "Location shared",
+    locationGrantedDesc: "Your map is now centered on your location.",
+    locationDenied: "Location access denied",
+    locationDeniedDesc: "We can't show you nearby neighbors without your location.",
+    locationNotSupported: "Geolocation not supported",
+    locationNotSupportedDesc: "Your browser does not support geolocation.",
+    backToConversations: "Back to conversations",
+    noActiveConversations: "No active conversations",
+    // Add new translation keys for rides
+    departure: "Departure",
+    arrival: "Arrival",
+    availableSeats: "Available seats",
+    createRide: "Create Ride"
+  },
+  ar: {
+    welcome: "مرحبًا بك في Voisin",
+    neighbors: "الجيران",
+    yourLocation: "موقعك",
+    createdBy: "أنشأ بواسطة",
+    discover: "اكتشف جيرانك",
+    features: "الميزات",
+    map: "خريطة",
+    mapDesc: "استكشف الحي الخاص بك واكتشف جيرانك",
+    discoverNeighbors: "اكتشف جيرانك",
+    discoverNeighborsDesc: "تواصل مع الأشخاص في حيك",
+    createEvents: "إنشاء أحداث",
+    createEventsDesc: "نظم أحداثًا محلية وادعُ جيرانك",
+    createGroups: "إنشاء مجموعات",
+    createGroupsDesc: "تشكيل مجتمعات حول الاهتمامات المشتركة",
+    joinRides: "مشاركة السيارة",
+    joinRidesDesc: "شارك رحلتك اليومية مع جيرانك",
+    login: "تسجيل الدخول",
+    signup: "إنشاء حساب",
+    logout: "تسجيل الخروج",
+    email: "البريد الإلكتروني",
+    password: "كلمة المرور",
+    confirmPassword: "تأكيد كلمة المرور",
+    createAccount: "إنشاء حساب",
+    alreadyHaveAccount: "هل لديك حساب بالفعل؟",
+    dontHaveAccount: "ليس لديك حساب؟",
+    username: "اسم المستخدم",
+    profileUpdated: "تم تحديث الملف الشخصي",
+    errorUpdatingProfile: "خطأ في تحديث الملف الشخصي",
+    dashboard: "لوحة القيادة",
+    profile: "الملف الشخصي",
+    chat: "الرسائل",
+    events: "الأحداث",
+    groups: "المجموعات",
+    rides: "الرحلات",
+    createEvent: "إنشاء حدث",
+    myProfile: "ملفي الشخصي",
+    editProfile: "تعديل الملف الشخصي",
+    languages: "اللغات",
+    interests: "الاهتمامات",
+    bio: "نبذة",
+    saveChanges: "حفظ التغييرات",
+    cancel: "إلغاء",
+    origin: "بلد المنشأ",
+    joinGroup: "الانضمام إلى المجموعة",
+    leaveGroup: "مغادرة المجموعة",
+    shareLocation: "شارك موقعك",
+    shareLocationDesc: "لرؤية الجيران بالقرب منك، نحتاج إلى موقعك.",
+    allowLocation: "السماح بتحديد الموقع الجغرافي",
+    locationGranted: "تم مشاركة الموقع",
+    locationGrantedDesc: "الخريطة الآن متمركزة على موقعك.",
+    locationDenied: "تم رفض الوصول إلى الموقع",
+    locationDeniedDesc: "لا يمكننا إظهار الجيران القريبين منك بدون موقعك.",
+    locationNotSupported: "تحديد الموقع الجغرافي غير مدعوم",
+    locationNotSupportedDesc: "متصفحك لا يدعم تحديد الموقع الجغرافي.",
+    backToConversations: "العودة إلى المحادثات",
+    noActiveConversations: "لا توجد محادثات نشطة",
+    // Add new translation keys for rides
+    departure: "المغادرة",
+    arrival: "الوصول",
+    availableSeats: "المقاعد المتاحة",
+    createRide: "إنشاء رحلة"
+  },
+  es: {
+    welcome: "Bienvenido a Voisin",
+    neighbors: "Vecinos",
+    yourLocation: "Tu ubicación",
+    createdBy: "Creado por",
+    discover: "Descubre a tus vecinos",
+    features: "Características",
+    map: "Mapa",
+    mapDesc: "Explora tu vecindario y descubre a tus vecinos",
+    discoverNeighbors: "Descubre a tus vecinos",
+    discoverNeighborsDesc: "Conéctate con personas de tu vecindario",
+    createEvents: "Crea eventos",
+    createEventsDesc: "Organiza eventos locales e invita a tus vecinos",
+    createGroups: "Crea grupos",
+    createGroupsDesc: "Forma comunidades en torno a intereses comunes",
+    joinRides: "Viajes compartidos",
+    joinRidesDesc: "Comparte tu trayecto diario con tus vecinos",
+    login: "Iniciar sesión",
+    signup: "Registrarse",
+    logout: "Cerrar sesión",
+    email: "Correo electrónico",
+    password: "Contraseña",
+    confirmPassword: "Confirmar contraseña",
+    createAccount: "Crear cuenta",
+    alreadyHaveAccount: "¿Ya tienes una cuenta?",
+    dontHaveAccount: "¿No tienes una cuenta?",
+    username: "Nombre de usuario",
+    profileUpdated: "Perfil actualizado",
+    errorUpdatingProfile: "Error al actualizar el perfil",
+    dashboard: "Panel",
+    profile: "Perfil",
+    chat: "Mensajes",
+    events: "Eventos",
+    groups: "Grupos",
+    rides: "Viajes",
+    createEvent: "Crear evento",
+    myProfile: "Mi perfil",
+    editProfile: "Editar perfil",
+    languages: "Idiomas",
+    interests: "Intereses",
+    bio: "Bio",
+    saveChanges: "Guardar cambios",
+    cancel: "Cancelar",
+    origin: "País de origen",
+    joinGroup: "Unirse al grupo",
+    leaveGroup: "Dejar el grupo",
+    shareLocation: "Comparte tu ubicación",
+    shareLocationDesc: "Para ver a los vecinos cercanos, necesitamos tu ubicación.",
+    allowLocation: "Permitir geolocalización",
+    locationGranted: "Ubicación compartida",
+    locationGrantedDesc: "Tu mapa ahora está centrado en tu ubicación.",
+    locationDenied: "Acceso a la ubicación denegado",
+    locationDeniedDesc: "No podemos mostrarte los vecinos cercanos sin tu ubicación.",
+    locationNotSupported: "Geolocalización no compatible",
+    locationNotSupportedDesc: "Tu navegador no admite la geolocalización.",
+    backToConversations: "Volver a las conversaciones",
+    noActiveConversations: "No hay conversaciones activas",
+    // Add new translation keys for rides
+    departure: "Salida",
+    arrival: "Llegada",
+    availableSeats: "Asientos disponibles",
+    createRide: "Crear viaje"
+  }
+};
+
+// Provider component
 export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [language, setLanguage] = useState<SupportedLanguage>("en");
+  const [language, setLanguage] = useState<string>("fr");
+
+  // Get translations for the current language
+  const translations = translationsByLanguage[language] || translationsByLanguage.fr;
 
   return (
-    <LanguageContext.Provider
-      value={{
-        language,
-        setLanguage,
-        translations: messages[language],
-      }}
-    >
+    <LanguageContext.Provider value={{ language, setLanguage, translations }}>
       {children}
     </LanguageContext.Provider>
   );
 };
 
+// Custom hook to use the language context
 export const useLanguage = () => useContext(LanguageContext);
