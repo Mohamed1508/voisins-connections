@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { useLanguage } from "@/context/LanguageContext";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { GoogleMap } from "@react-google-maps/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -11,7 +11,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import RideForm from "@/components/rides/RideForm";
-import { spotIcon, rideIcon } from "@/components/map/leaflet/LeafletConfig";
+import { spotIcon, rideIcon, mapStyles } from "@/components/map/leaflet/LeafletConfig";
+import { Link } from "react-router-dom";
+import RideMarker from "@/components/map/markers/RideMarker";
+import GoogleMapProvider from "@/components/map/GoogleMapProvider";
+import SpotMarker from "@/components/map/markers/SpotMarker";
+
+const mapContainerStyle = {
+  height: "100%",
+  width: "100%"
+};
 
 const Rides = () => {
   const { translations } = useLanguage();
@@ -22,6 +31,8 @@ const Rides = () => {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [position, setPosition] = useState({ lat: 48.8566, lng: 2.3522 });
+  const [selectedRide, setSelectedRide] = useState<string | null>(null);
+  const [mapRef, setMapRef] = useState<google.maps.Map | null>(null);
 
   useEffect(() => {
     fetchRides();
@@ -63,15 +74,23 @@ const Rides = () => {
     }
   };
 
-  const handleMapClick = (e: any) => {
-    if (showForm) {
-      setPosition({ lat: e.latlng.lat, lng: e.latlng.lng });
+  const handleMapClick = (e: google.maps.MapMouseEvent) => {
+    if (showForm && e.latLng) {
+      setPosition({ lat: e.latLng.lat(), lng: e.latLng.lng() });
     }
   };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString();
+  };
+
+  const handleRideClick = (ride: any) => {
+    setSelectedRide(selectedRide === ride.id ? null : ride.id);
+  };
+
+  const onMapLoad = (map: google.maps.Map) => {
+    setMapRef(map);
   };
 
   const RideCard = ({ ride }: { ride: any }) => (
@@ -136,45 +155,47 @@ const Rides = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           {/* Map */}
-          <div className="lg:col-span-3 relative rounded-lg overflow-hidden shadow-md">
-            <div className="h-[500px]">
-              <MapContainer
-                style={{ height: "100%", width: "100%" }}
-                center={[position.lat, position.lng]}
+          <div className="lg:col-span-3 relative rounded-lg overflow-hidden shadow-md h-[500px]">
+            <GoogleMapProvider>
+              <GoogleMap
+                mapContainerStyle={mapContainerStyle}
+                center={position}
                 zoom={13}
                 onClick={handleMapClick}
+                onLoad={onMapLoad}
+                options={{
+                  styles: mapStyles,
+                  zoomControl: true,
+                  streetViewControl: false,
+                  mapTypeControl: false
+                }}
               >
-                <TileLayer
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                />
-                
                 {/* Ride markers */}
                 {rides.map((ride) => (
-                  <Marker 
+                  <RideMarker 
                     key={ride.id} 
-                    position={[ride.lat, ride.lng]}
-                    icon={rideIcon}
-                  >
-                    <Popup>
-                      <div className="text-sm">
-                        <p className="font-bold">{ride.name}</p>
-                        <p>{ride.departure} → {ride.arrival}</p>
-                        <p>{formatDate(ride.date)} • {ride.time}</p>
-                        <p>{ride.available_seats} {ride.available_seats === 1 ? 'seat' : 'seats'} available</p>
-                      </div>
-                    </Popup>
-                  </Marker>
+                    ride={ride}
+                    onClick={handleRideClick}
+                    selected={selectedRide === ride.id}
+                    onClose={() => setSelectedRide(null)}
+                  />
                 ))}
                 
                 {/* Position marker when creating a ride */}
                 {showForm && (
-                  <Marker position={[position.lat, position.lng]} icon={spotIcon}>
-                    <Popup>{translations.locationNote}</Popup>
-                  </Marker>
+                  <SpotMarker 
+                    spot={{
+                      id: 'new-ride',
+                      name: translations.locationNote || "Position sélectionnée",
+                      lat: position.lat,
+                      lng: position.lng,
+                      createdBy: ''
+                    }}
+                    selected={true}
+                  />
                 )}
-              </MapContainer>
-            </div>
+              </GoogleMap>
+            </GoogleMapProvider>
             
             {showForm && (
               <div className="absolute bottom-0 left-0 right-0 bg-background/90 backdrop-blur-sm">

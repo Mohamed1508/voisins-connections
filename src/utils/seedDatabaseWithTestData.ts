@@ -7,10 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
  */
 export const seedDatabaseWithTestData = async () => {
   try {
-    // Create auth users first (this would normally be done through signup)
-    // Note: This wouldn't actually work in a real application due to security,
-    // but we're simulating the presence of auth users for the sake of the demo
-
+    console.log("Checking if test data exists...");
+    
     // Check if test users already exist in the public users table
     const { data: existingUsers } = await supabase
       .from('users')
@@ -21,8 +19,6 @@ export const seedDatabaseWithTestData = async () => {
       console.log("Adding test user data to the database...");
       
       // Insert test users into the public users table
-      // In a real app, these would be linked to auth users
-      // but for preview we'll just add them as standalone entries
       await supabase
         .from('users')
         .upsert([
@@ -44,7 +40,7 @@ export const seedDatabaseWithTestData = async () => {
             lat: 48.8606,
             lng: 2.3376,
             origin_country: 'Tunisie',
-            languages: ['français', 'arabe', 'anglais'],
+            languages: ['français', 'arabe', 'anglais', 'espagnol'],
             interests: ['sport', 'lecture'],
             bio: 'Heureuse de rencontrer mes voisins!'
           }
@@ -74,6 +70,72 @@ export const seedDatabaseWithTestData = async () => {
             created_by: '11111111-1111-1111-1111-111111111111',
             lat: 48.8486,
             lng: 2.3465
+          }
+        ]);
+    }
+
+    // Check if test group already exists
+    const { data: existingGroups } = await supabase
+      .from('groups')
+      .select('name')
+      .eq('name', 'Groupe multiculturel');
+
+    if (!existingGroups || existingGroups.length === 0) {
+      console.log("Adding test group data to the database...");
+      
+      // Insert test group
+      const { data: group, error } = await supabase
+        .from('groups')
+        .insert([
+          {
+            name: 'Groupe multiculturel',
+            description: 'Groupe pour célébrer les différentes cultures',
+            created_by: '11111111-1111-1111-1111-111111111111',
+            lat: 48.8616,
+            lng: 2.3492
+          }
+        ])
+        .select();
+
+      if (group && group.length > 0) {
+        // Add members to the group
+        await supabase
+          .from('group_members')
+          .insert([
+            {
+              group_id: group[0].id,
+              user_id: '11111111-1111-1111-1111-111111111111',
+              role: 'admin'
+            },
+            {
+              group_id: group[0].id,
+              user_id: '22222222-2222-2222-2222-222222222222',
+              role: 'member'
+            }
+          ]);
+      }
+    }
+
+    // Check if test spot already exists
+    const { data: existingSpots } = await supabase
+      .from('community_spots')
+      .select('name')
+      .eq('name', 'Restaurant marocain');
+
+    if (!existingSpots || existingSpots.length === 0) {
+      console.log("Adding test community spot data to the database...");
+      
+      // Insert test spot
+      await supabase
+        .from('community_spots')
+        .insert([
+          {
+            name: 'Restaurant marocain',
+            description: 'Excellent restaurant authentique',
+            created_by: '11111111-1111-1111-1111-111111111111',
+            lat: 48.8536,
+            lng: 2.3502,
+            origin_related: 'Maroc'
           }
         ]);
     }

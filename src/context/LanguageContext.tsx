@@ -1,356 +1,275 @@
 
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, ReactNode } from "react";
 
-// Define the shape of translations
+// Define supported languages
+export type SupportedLanguage = "fr" | "en" | "ar" | "es";
+
+// Define translations type
 interface Translations {
   welcome: string;
   neighbors: string;
-  yourLocation: string;
-  createdBy: string;
   discover: string;
+  login: string;
+  signup: string;
+  signUp: string;
   features: string;
   map: string;
   mapDesc: string;
   discoverNeighbors: string;
   discoverNeighborsDesc: string;
-  createEvents: string;
-  createEventsDesc: string;
-  createGroups: string;
-  createGroupsDesc: string;
-  joinRides: string;
-  joinRidesDesc: string;
-  login: string;
-  signup: string;
-  logout: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-  createAccount: string;
-  alreadyHaveAccount: string;
-  dontHaveAccount: string;
-  username: string;
-  profileUpdated: string;
-  errorUpdatingProfile: string;
-  dashboard: string;
-  profile: string;
-  chat: string;
-  events: string;
-  groups: string;
-  rides: string;
-  createEvent: string;
-  myProfile: string;
-  editProfile: string;
-  languages: string;
-  interests: string;
-  bio: string;
-  saveChanges: string;
-  cancel: string;
-  origin: string;
-  joinGroup: string;
-  leaveGroup: string;
-  shareLocation: string;
-  shareLocationDesc: string;
-  allowLocation: string;
-  locationGranted: string;
-  locationGrantedDesc: string;
-  locationDenied: string;
-  locationDeniedDesc: string;
-  locationNotSupported: string;
-  locationNotSupportedDesc: string;
-  backToConversations: string;
-  noActiveConversations: string;
-  // Add new translation keys for rides
-  departure: string;
-  arrival: string;
-  availableSeats: string;
+  messaging: string;
+  messagingDesc: string;
+  carpooling: string;
+  carpoolingDesc: string;
+  yourLocation: string;
+  created_by: string;
+  createdBy: string;
+  searchRadius: string;
+  searchAddress: string;
+  locationNote: string;
+  date: string;
+  time: string;
+  eventName: string;
+  communitySpots: string;
+  createSpot: string;
+  spotName: string;
+  spotDescription: string;
+  spotOriginRelated: string;
+  createGroup: string;
+  groupName: string;
+  groupDescription: string;
+  myGroups: string;
+  availableGroups: string;
+  admin: string;
+  member: string;
+  members: string;
   createRide: string;
-}
-
-// Define the shape of our context
-interface LanguageContextType {
+  cancel: string;
+  languages: string;
   language: string;
-  setLanguage: (lang: string) => void;
-  translations: Translations;
+  [key: string]: string;
 }
 
-// Create the context with a default value
-const LanguageContext = createContext<LanguageContextType>({
-  language: "fr",
-  setLanguage: () => {},
-  translations: {} as Translations,
-});
+interface LanguageContextType {
+  language: SupportedLanguage;
+  setLanguage: (lang: SupportedLanguage) => void;
+  translations: Translations;
+  isRTL: boolean;
+}
 
-// Define available languages and their translations
-const availableLanguages = ["fr", "en", "ar", "es"];
+// Create the context
+const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
-const translationsByLanguage: Record<string, Translations> = {
+// Default translations
+const defaultTranslations: Record<SupportedLanguage, Translations> = {
   fr: {
-    welcome: "Bienvenue sur Voisin",
-    neighbors: "Voisins",
-    yourLocation: "Votre position",
-    createdBy: "Créé par",
-    discover: "Découvrez vos voisins",
-    features: "Fonctionnalités",
-    map: "Carte",
-    mapDesc: "Explorez votre quartier et découvrez vos voisins",
-    discoverNeighbors: "Découvrez vos voisins",
-    discoverNeighborsDesc: "Connectez-vous avec des personnes de votre quartier",
-    createEvents: "Créez des événements",
-    createEventsDesc: "Organisez des événements locaux et invitez vos voisins",
-    createGroups: "Créez des groupes",
-    createGroupsDesc: "Formez des communautés autour d'intérêts communs",
-    joinRides: "Covoiturage",
-    joinRidesDesc: "Partagez vos trajets quotidiens avec vos voisins",
+    welcome: "Bienvenue dans votre",
+    neighbors: "voisinage",
+    discover: "Découvrez vos voisins, participez à des événements locaux, et créez des liens dans votre communauté.",
     login: "Connexion",
     signup: "Inscription",
-    logout: "Déconnexion",
-    email: "Email",
-    password: "Mot de passe",
-    confirmPassword: "Confirmer le mot de passe",
-    createAccount: "Créer un compte",
-    alreadyHaveAccount: "Vous avez déjà un compte?",
-    dontHaveAccount: "Vous n'avez pas de compte?",
-    username: "Nom d'utilisateur",
-    profileUpdated: "Profil mis à jour",
-    errorUpdatingProfile: "Erreur lors de la mise à jour du profil",
-    dashboard: "Tableau de bord",
-    profile: "Profil",
-    chat: "Messages",
-    events: "Événements",
-    groups: "Groupes",
-    rides: "Covoiturage",
-    createEvent: "Créer un événement",
-    myProfile: "Mon profil",
-    editProfile: "Modifier le profil",
-    languages: "Langues",
-    interests: "Centres d'intérêt",
-    bio: "Bio",
-    saveChanges: "Enregistrer",
+    signUp: "S'inscrire",
+    features: "Fonctionnalités",
+    map: "Carte intéractive",
+    mapDesc: "Visualisez vos voisins proches et découvrez des lieux d'intérêt dans votre quartier.",
+    discoverNeighbors: "Découvrir vos voisins",
+    discoverNeighborsDesc: "Rencontrez des personnes partageant vos intérêts et qui habitent à proximité.",
+    messaging: "Messagerie",
+    messagingDesc: "Communiquez facilement avec vos voisins pour partager des conseils ou organiser des rencontres.",
+    carpooling: "Covoiturage",
+    carpoolingDesc: "Partagez vos trajets quotidiens pour économiser et réduire votre empreinte carbone.",
+    yourLocation: "Votre position",
+    created_by: "Créé par",
+    createdBy: "Créé par",
+    searchRadius: "Rayon de recherche",
+    searchAddress: "Rechercher une adresse",
+    locationNote: "Position sélectionnée",
+    date: "Date",
+    time: "Heure",
+    eventName: "Nom de l'événement",
+    communitySpots: "Lieux communautaires",
+    createSpot: "Créer un lieu",
+    spotName: "Nom du lieu",
+    spotDescription: "Description",
+    spotOriginRelated: "Lié à une origine",
+    createGroup: "Créer un groupe",
+    groupName: "Nom du groupe",
+    groupDescription: "Description du groupe",
+    myGroups: "Mes groupes",
+    availableGroups: "Groupes disponibles",
+    admin: "Admin",
+    member: "Membre",
+    members: "Membres",
+    createRide: "Créer un trajet",
     cancel: "Annuler",
-    origin: "Pays d'origine",
-    joinGroup: "Rejoindre le groupe",
-    leaveGroup: "Quitter le groupe",
-    shareLocation: "Partagez votre position",
-    shareLocationDesc: "Pour voir les voisins proches de vous, nous avons besoin de votre position.",
-    allowLocation: "Autoriser la géolocalisation",
-    locationGranted: "Position partagée",
-    locationGrantedDesc: "Votre carte est maintenant centrée sur votre position.",
-    locationDenied: "Accès à la position refusé",
-    locationDeniedDesc: "Nous ne pouvons pas vous montrer les voisins proches sans votre position.",
-    locationNotSupported: "Géolocalisation non supportée",
-    locationNotSupportedDesc: "Votre navigateur ne supporte pas la géolocalisation.",
-    backToConversations: "Retour aux conversations",
-    noActiveConversations: "Aucune conversation active",
-    // Add new translation keys for rides
-    departure: "Départ",
-    arrival: "Arrivée",
-    availableSeats: "Places disponibles",
-    createRide: "Créer un trajet"
+    languages: "Langues",
+    language: "Langue",
+    chats: "Messages",
+    chat: "Messages"
   },
   en: {
-    welcome: "Welcome to Voisin",
-    neighbors: "Neighbors",
-    yourLocation: "Your location",
-    createdBy: "Created by",
-    discover: "Discover your neighbors",
-    features: "Features",
-    map: "Map",
-    mapDesc: "Explore your neighborhood and discover your neighbors",
-    discoverNeighbors: "Discover your neighbors",
-    discoverNeighborsDesc: "Connect with people in your neighborhood",
-    createEvents: "Create events",
-    createEventsDesc: "Organize local events and invite your neighbors",
-    createGroups: "Create groups",
-    createGroupsDesc: "Form communities around common interests",
-    joinRides: "Carpooling",
-    joinRidesDesc: "Share your daily commute with your neighbors",
+    welcome: "Welcome to your",
+    neighbors: "neighborhood",
+    discover: "Discover your neighbors, participate in local events, and create connections in your community.",
     login: "Login",
-    signup: "Sign Up",
-    logout: "Logout",
-    email: "Email",
-    password: "Password",
-    confirmPassword: "Confirm Password",
-    createAccount: "Create Account",
-    alreadyHaveAccount: "Already have an account?",
-    dontHaveAccount: "Don't have an account?",
-    username: "Username",
-    profileUpdated: "Profile updated",
-    errorUpdatingProfile: "Error updating profile",
-    dashboard: "Dashboard",
-    profile: "Profile",
-    chat: "Messages",
-    events: "Events",
-    groups: "Groups",
-    rides: "Rides",
-    createEvent: "Create Event",
-    myProfile: "My Profile",
-    editProfile: "Edit Profile",
-    languages: "Languages",
-    interests: "Interests",
-    bio: "Bio",
-    saveChanges: "Save Changes",
+    signup: "Sign up",
+    signUp: "Sign up",
+    features: "Features",
+    map: "Interactive Map",
+    mapDesc: "Visualize your close neighbors and discover points of interest in your area.",
+    discoverNeighbors: "Discover Neighbors",
+    discoverNeighborsDesc: "Meet people sharing your interests and who live nearby.",
+    messaging: "Messaging",
+    messagingDesc: "Easily communicate with your neighbors to share tips or organize meetings.",
+    carpooling: "Carpooling",
+    carpoolingDesc: "Share your daily commutes to save money and reduce your carbon footprint.",
+    yourLocation: "Your location",
+    created_by: "Created by",
+    createdBy: "Created by",
+    searchRadius: "Search radius",
+    searchAddress: "Search address",
+    locationNote: "Selected location",
+    date: "Date",
+    time: "Time",
+    eventName: "Event name",
+    communitySpots: "Community spots",
+    createSpot: "Create spot",
+    spotName: "Spot name",
+    spotDescription: "Description",
+    spotOriginRelated: "Related to an origin",
+    createGroup: "Create group",
+    groupName: "Group name",
+    groupDescription: "Group description",
+    myGroups: "My groups",
+    availableGroups: "Available groups",
+    admin: "Admin",
+    member: "Member",
+    members: "Members",
+    createRide: "Create ride",
     cancel: "Cancel",
-    origin: "Country of Origin",
-    joinGroup: "Join Group",
-    leaveGroup: "Leave Group",
-    shareLocation: "Share your location",
-    shareLocationDesc: "To see neighbors near you, we need your location.",
-    allowLocation: "Allow Geolocation",
-    locationGranted: "Location shared",
-    locationGrantedDesc: "Your map is now centered on your location.",
-    locationDenied: "Location access denied",
-    locationDeniedDesc: "We can't show you nearby neighbors without your location.",
-    locationNotSupported: "Geolocation not supported",
-    locationNotSupportedDesc: "Your browser does not support geolocation.",
-    backToConversations: "Back to conversations",
-    noActiveConversations: "No active conversations",
-    // Add new translation keys for rides
-    departure: "Departure",
-    arrival: "Arrival",
-    availableSeats: "Available seats",
-    createRide: "Create Ride"
+    languages: "Languages",
+    language: "Language",
+    chats: "Messages",
+    chat: "Messages"
   },
   ar: {
-    welcome: "مرحبًا بك في Voisin",
-    neighbors: "الجيران",
-    yourLocation: "موقعك",
-    createdBy: "أنشأ بواسطة",
-    discover: "اكتشف جيرانك",
-    features: "الميزات",
-    map: "خريطة",
-    mapDesc: "استكشف الحي الخاص بك واكتشف جيرانك",
-    discoverNeighbors: "اكتشف جيرانك",
-    discoverNeighborsDesc: "تواصل مع الأشخاص في حيك",
-    createEvents: "إنشاء أحداث",
-    createEventsDesc: "نظم أحداثًا محلية وادعُ جيرانك",
-    createGroups: "إنشاء مجموعات",
-    createGroupsDesc: "تشكيل مجتمعات حول الاهتمامات المشتركة",
-    joinRides: "مشاركة السيارة",
-    joinRidesDesc: "شارك رحلتك اليومية مع جيرانك",
+    welcome: "مرحبا بكم في",
+    neighbors: "حيكم",
+    discover: "اكتشف جيرانك، شارك في الأحداث المحلية، وأنشئ روابط في مجتمعك.",
     login: "تسجيل الدخول",
-    signup: "إنشاء حساب",
-    logout: "تسجيل الخروج",
-    email: "البريد الإلكتروني",
-    password: "كلمة المرور",
-    confirmPassword: "تأكيد كلمة المرور",
-    createAccount: "إنشاء حساب",
-    alreadyHaveAccount: "هل لديك حساب بالفعل؟",
-    dontHaveAccount: "ليس لديك حساب؟",
-    username: "اسم المستخدم",
-    profileUpdated: "تم تحديث الملف الشخصي",
-    errorUpdatingProfile: "خطأ في تحديث الملف الشخصي",
-    dashboard: "لوحة القيادة",
-    profile: "الملف الشخصي",
-    chat: "الرسائل",
-    events: "الأحداث",
-    groups: "المجموعات",
-    rides: "الرحلات",
-    createEvent: "إنشاء حدث",
-    myProfile: "ملفي الشخصي",
-    editProfile: "تعديل الملف الشخصي",
-    languages: "اللغات",
-    interests: "الاهتمامات",
-    bio: "نبذة",
-    saveChanges: "حفظ التغييرات",
+    signup: "التسجيل",
+    signUp: "التسجيل",
+    features: "المميزات",
+    map: "خريطة تفاعلية",
+    mapDesc: "تصور جيرانك القريبين واكتشف نقاط الاهتمام في منطقتك.",
+    discoverNeighbors: "اكتشف الجيران",
+    discoverNeighborsDesc: "قابل أشخاصًا يشاركونك اهتماماتك ويعيشون بالقرب منك.",
+    messaging: "المراسلة",
+    messagingDesc: "تواصل بسهولة مع جيرانك لمشاركة النصائح أو تنظيم اللقاءات.",
+    carpooling: "مشاركة السيارة",
+    carpoolingDesc: "شارك رحلاتك اليومية لتوفير المال وتقليل بصمتك الكربونية.",
+    yourLocation: "موقعك",
+    created_by: "تم إنشاؤه بواسطة",
+    createdBy: "تم إنشاؤه بواسطة",
+    searchRadius: "نصف قطر البحث",
+    searchAddress: "البحث عن عنوان",
+    locationNote: "الموقع المختار",
+    date: "التاريخ",
+    time: "الوقت",
+    eventName: "اسم الحدث",
+    communitySpots: "أماكن المجتمع",
+    createSpot: "إنشاء مكان",
+    spotName: "اسم المكان",
+    spotDescription: "الوصف",
+    spotOriginRelated: "متعلق بأصل",
+    createGroup: "إنشاء مجموعة",
+    groupName: "اسم المجموعة",
+    groupDescription: "وصف المجموعة",
+    myGroups: "مجموعاتي",
+    availableGroups: "المجموعات المتاحة",
+    admin: "مسؤول",
+    member: "عضو",
+    members: "الأعضاء",
+    createRide: "إنشاء رحلة",
     cancel: "إلغاء",
-    origin: "بلد المنشأ",
-    joinGroup: "الانضمام إلى المجموعة",
-    leaveGroup: "مغادرة المجموعة",
-    shareLocation: "شارك موقعك",
-    shareLocationDesc: "لرؤية الجيران بالقرب منك، نحتاج إلى موقعك.",
-    allowLocation: "السماح بتحديد الموقع الجغرافي",
-    locationGranted: "تم مشاركة الموقع",
-    locationGrantedDesc: "الخريطة الآن متمركزة على موقعك.",
-    locationDenied: "تم رفض الوصول إلى الموقع",
-    locationDeniedDesc: "لا يمكننا إظهار الجيران القريبين منك بدون موقعك.",
-    locationNotSupported: "تحديد الموقع الجغرافي غير مدعوم",
-    locationNotSupportedDesc: "متصفحك لا يدعم تحديد الموقع الجغرافي.",
-    backToConversations: "العودة إلى المحادثات",
-    noActiveConversations: "لا توجد محادثات نشطة",
-    // Add new translation keys for rides
-    departure: "المغادرة",
-    arrival: "الوصول",
-    availableSeats: "المقاعد المتاحة",
-    createRide: "إنشاء رحلة"
+    languages: "اللغات",
+    language: "اللغة",
+    chats: "الرسائل",
+    chat: "الرسائل"
   },
   es: {
-    welcome: "Bienvenido a Voisin",
-    neighbors: "Vecinos",
-    yourLocation: "Tu ubicación",
-    createdBy: "Creado por",
-    discover: "Descubre a tus vecinos",
-    features: "Características",
-    map: "Mapa",
-    mapDesc: "Explora tu vecindario y descubre a tus vecinos",
-    discoverNeighbors: "Descubre a tus vecinos",
-    discoverNeighborsDesc: "Conéctate con personas de tu vecindario",
-    createEvents: "Crea eventos",
-    createEventsDesc: "Organiza eventos locales e invita a tus vecinos",
-    createGroups: "Crea grupos",
-    createGroupsDesc: "Forma comunidades en torno a intereses comunes",
-    joinRides: "Viajes compartidos",
-    joinRidesDesc: "Comparte tu trayecto diario con tus vecinos",
+    welcome: "Bienvenido a tu",
+    neighbors: "vecindario",
+    discover: "Descubre a tus vecinos, participa en eventos locales y crea conexiones en tu comunidad.",
     login: "Iniciar sesión",
     signup: "Registrarse",
-    logout: "Cerrar sesión",
-    email: "Correo electrónico",
-    password: "Contraseña",
-    confirmPassword: "Confirmar contraseña",
-    createAccount: "Crear cuenta",
-    alreadyHaveAccount: "¿Ya tienes una cuenta?",
-    dontHaveAccount: "¿No tienes una cuenta?",
-    username: "Nombre de usuario",
-    profileUpdated: "Perfil actualizado",
-    errorUpdatingProfile: "Error al actualizar el perfil",
-    dashboard: "Panel",
-    profile: "Perfil",
-    chat: "Mensajes",
-    events: "Eventos",
-    groups: "Grupos",
-    rides: "Viajes",
-    createEvent: "Crear evento",
-    myProfile: "Mi perfil",
-    editProfile: "Editar perfil",
-    languages: "Idiomas",
-    interests: "Intereses",
-    bio: "Bio",
-    saveChanges: "Guardar cambios",
+    signUp: "Registrarse",
+    features: "Características",
+    map: "Mapa interactivo",
+    mapDesc: "Visualiza a tus vecinos cercanos y descubre puntos de interés en tu área.",
+    discoverNeighbors: "Descubrir vecinos",
+    discoverNeighborsDesc: "Conoce a personas que comparten tus intereses y que viven cerca.",
+    messaging: "Mensajería",
+    messagingDesc: "Comunícate fácilmente con tus vecinos para compartir consejos o organizar reuniones.",
+    carpooling: "Compartir coche",
+    carpoolingDesc: "Comparte tus desplazamientos diarios para ahorrar dinero y reducir tu huella de carbono.",
+    yourLocation: "Tu ubicación",
+    created_by: "Creado por",
+    createdBy: "Creado por",
+    searchRadius: "Radio de búsqueda",
+    searchAddress: "Buscar dirección",
+    locationNote: "Ubicación seleccionada",
+    date: "Fecha",
+    time: "Hora",
+    eventName: "Nombre del evento",
+    communitySpots: "Lugares comunitarios",
+    createSpot: "Crear lugar",
+    spotName: "Nombre del lugar",
+    spotDescription: "Descripción",
+    spotOriginRelated: "Relacionado con un origen",
+    createGroup: "Crear grupo",
+    groupName: "Nombre del grupo",
+    groupDescription: "Descripción del grupo",
+    myGroups: "Mis grupos",
+    availableGroups: "Grupos disponibles",
+    admin: "Administrador",
+    member: "Miembro",
+    members: "Miembros",
+    createRide: "Crear viaje",
     cancel: "Cancelar",
-    origin: "País de origen",
-    joinGroup: "Unirse al grupo",
-    leaveGroup: "Dejar el grupo",
-    shareLocation: "Comparte tu ubicación",
-    shareLocationDesc: "Para ver a los vecinos cercanos, necesitamos tu ubicación.",
-    allowLocation: "Permitir geolocalización",
-    locationGranted: "Ubicación compartida",
-    locationGrantedDesc: "Tu mapa ahora está centrado en tu ubicación.",
-    locationDenied: "Acceso a la ubicación denegado",
-    locationDeniedDesc: "No podemos mostrarte los vecinos cercanos sin tu ubicación.",
-    locationNotSupported: "Geolocalización no compatible",
-    locationNotSupportedDesc: "Tu navegador no admite la geolocalización.",
-    backToConversations: "Volver a las conversaciones",
-    noActiveConversations: "No hay conversaciones activas",
-    // Add new translation keys for rides
-    departure: "Salida",
-    arrival: "Llegada",
-    availableSeats: "Asientos disponibles",
-    createRide: "Crear viaje"
+    languages: "Idiomas",
+    language: "Idioma",
+    chats: "Mensajes",
+    chat: "Mensajes"
   }
 };
 
 // Provider component
-export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [language, setLanguage] = useState<string>("fr");
-
-  // Get translations for the current language
-  const translations = translationsByLanguage[language] || translationsByLanguage.fr;
-
+export const LanguageProvider = ({ children }: { children: ReactNode }) => {
+  const [language, setLanguage] = useState<SupportedLanguage>("fr");
+  
+  // Determine if the language is RTL
+  const isRTL = language === "ar";
+  
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, translations }}>
+    <LanguageContext.Provider
+      value={{
+        language,
+        setLanguage,
+        translations: defaultTranslations[language],
+        isRTL
+      }}
+    >
       {children}
     </LanguageContext.Provider>
   );
 };
 
-// Custom hook to use the language context
-export const useLanguage = () => useContext(LanguageContext);
+// Hook to use the Language context
+export const useLanguage = () => {
+  const context = useContext(LanguageContext);
+  if (context === undefined) {
+    throw new Error("useLanguage must be used within a LanguageProvider");
+  }
+  return context;
+};

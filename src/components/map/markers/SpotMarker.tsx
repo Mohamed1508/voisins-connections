@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Marker, Popup } from "react-leaflet";
+import { Marker, InfoWindow } from "@react-google-maps/api";
 import { spotIcon } from "../leaflet/LeafletConfig";
 import { useLanguage } from "@/context/LanguageContext";
 
@@ -13,26 +13,28 @@ interface SpotMarkerProps {
     createdBy: string;
   };
   onClick?: (spot: any) => void;
+  selected?: boolean;
+  onClose?: () => void;
 }
 
-const SpotMarker: React.FC<SpotMarkerProps> = ({ spot, onClick }) => {
+const SpotMarker: React.FC<SpotMarkerProps> = ({ spot, onClick, selected, onClose }) => {
   const { translations } = useLanguage();
   
   return (
     <Marker
       key={spot.id}
-      position={[spot.lat, spot.lng]}
+      position={{ lat: spot.lat, lng: spot.lng }}
       icon={spotIcon}
-      eventHandlers={{
-        click: () => onClick && onClick(spot),
-      }}
+      onClick={() => onClick && onClick(spot)}
     >
-      <Popup>
-        <div className="text-sm">
-          <p className="font-bold">{spot.name}</p>
-          <p className="text-xs text-gray-600">{translations.createdBy || "Créé par"}: {spot.createdBy}</p>
-        </div>
-      </Popup>
+      {selected && (
+        <InfoWindow onCloseClick={onClose}>
+          <div className="text-sm">
+            <p className="font-bold">{spot.name}</p>
+            <p className="text-xs text-gray-600">{translations.created_by || "Créé par"}: {spot.createdBy}</p>
+          </div>
+        </InfoWindow>
+      )}
     </Marker>
   );
 };

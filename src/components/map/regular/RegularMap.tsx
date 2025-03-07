@@ -1,7 +1,6 @@
 
-import React, { useRef } from "react";
-import { MapContainer, TileLayer, Circle, Marker, Popup } from "react-leaflet";
-import L from "leaflet";
+import React, { useRef, useState, useCallback } from "react";
+import { GoogleMap, Circle } from "@react-google-maps/api";
 import { useLanguage } from "@/context/LanguageContext";
 import MapCenterUpdater from "../controls/MapCenterUpdater";
 import MapSearch from "../controls/MapSearch";
@@ -11,17 +10,25 @@ import EventMarker from "../markers/EventMarker";
 import SpotMarker from "../markers/SpotMarker";
 import GroupMarker from "../markers/GroupMarker";
 import RideMarker from "../markers/RideMarker";
+import { mapStyles } from "../leaflet/LeafletConfig";
 import { MapViewProps } from "../types/MapViewTypes";
 
 interface RegularMapProps extends Omit<MapViewProps, 'previewMode' | 'askLocation'> {
   userRealLocation: { lat: number; lng: number } | null;
+  realNeighbors?: any[];
 }
+
+const mapContainerStyle = {
+  height: "500px",
+  width: "100%",
+  borderRadius: "0.5rem"
+};
 
 const RegularMap: React.FC<RegularMapProps> = ({
   userLocation,
   userRealLocation,
-  neighbors,
-  events,
+  neighbors = [],
+  events = [],
   spots = [],
   groups = [],
   rides = [],
@@ -34,58 +41,103 @@ const RegularMap: React.FC<RegularMapProps> = ({
   realNeighbors = []
 }) => {
   const { translations } = useLanguage();
-  const mapRef = useRef<L.Map | null>(null);
-  const mapCenter: [number, number] = userRealLocation 
-    ? [userRealLocation.lat, userRealLocation.lng] 
-    : [userLocation.lat, userLocation.lng];
+  const mapRef = useRef<google.maps.Map | null>(null);
+  const [selectedMarker, setSelectedMarker] = useState<string | null>(null);
+  
+  const location = userRealLocation || userLocation;
+  const mapCenter = { lat: location.lat, lng: location.lng };
+  
+  const onMapLoad = (map: google.maps.Map) => {
+    mapRef.current = map;
+  };
+
+  const onPlaceSelected = (location: {lat: number, lng: number}) => {
+    mapRef.current?.panTo(location);
+  };
+
+  const handleNeighborClick = useCallback((id: string) => {
+    setSelectedMarker(selectedMarker === `neighbor-${id}` ? null : `neighbor-${id}`);
+  }, [selectedMarker]);
+
+  const handleEventClick = useCallback((event: any) => {
+    if (onEventClick) onEventClick(event);
+    setSelectedMarker(selectedMarker === `event-${event.id}` ? null : `event-${event.id}`);
+  }, [onEventClick, selectedMarker]);
+
+  const handleSpotClick = useCallback((spot: any) => {
+    if (onSpotClick) onSpotClick(spot);
+    setSelectedMarker(selectedMarker === `spot-${spot.id}` ? null : `spot-${spot.id}`);
+  }, [onSpotClick, selectedMarker]);
+
+  const handleGroupClick = useCallback((group: any) => {
+    if (onGroupClick) onGroupClick(group);
+    setSelectedMarker(selectedMarker === `group-${group.id}` ? null : `group-${group.id}`);
+  }, [onGroupClick, selectedMarker]);
+
+  const handleRideClick = useCallback((ride: any) => {
+    if (onRideClick) onRideClick(ride);
+    setSelectedMarker(selectedMarker === `ride-${ride.id}` ? null : `ride-${ride.id}`);
+  }, [onRideClick, selectedMarker]);
 
   return (
-    <MapContainer
+    <GoogleMap
+      mapContainerStyle={mapContainerStyle}
       center={mapCenter}
       zoom={13}
-      style={{ height: "500px", width: "100%", borderRadius: "0.5rem" }}
-      whenCreated={(map: L.Map) => {
-        mapRef.current = map;
+      onLoad={onMapLoad}
+      options={{
+        styles: mapStyles,
+        zoomControl: true,
+        streetViewControl: false,
+        mapTypeControl: false
       }}
     >
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      {/* User location marker */}
+      <NeighborMarker
+        neighbor={{
+          id: "user",
+          name: translations.yourLocation || "Votre position",
+          lat: location.lat,
+          lng: location.lng
+        }}
+        selected={selectedMarker === "user-location"}
+        onClick={() => setSelectedMarker(selectedMarker === "user-location" ? null : "user-location")}
+        onClose={() => setSelectedMarker(null)}
       />
 
-      <MapCenterUpdater center={mapCenter} />
-
-      {userRealLocation ? (
-        <Marker position={[userRealLocation.lat, userRealLocation.lng]}>
-          <Popup>{translations.yourLocation || "Votre position"}</Popup>
-        </Marker>
-      ) : (
-        <Marker position={[userLocation.lat, userLocation.lng]}>
-          <Popup>{translations.yourLocation || "Votre position"}</Popup>
-        </Marker>
-      )}
-
+      {/* Search radius circle */}
       <Circle
-        center={userRealLocation ? [userRealLocation.lat, userRealLocation.lng] : [userLocation.lat, userLocation.lng]}
-        pathOptions={{
+        center={mapCenter}
+        options={{
           fillColor: "#3b82f6",
           fillOpacity: 0.1,
-          color: "#3b82f6",
-          weight: 1,
+          strokeColor: "#3b82f6",
+          strokeWeight: 1,
+          radius: kmToMeters(searchRadius)
         }}
-        radius={kmToMeters(searchRadius)}
       />
 
+      {/* Event markers */}
       {events.map((event) => (
-        <EventMarker key={event.id} event={event} onClick={onEventClick} />
+        <EventMarker 
+          key={event.id} 
+          event={event} 
+          onClick={handleEventClick}
+          selected={selectedMarker === `event-${event.id}`}
+          onClose={() => setSelectedMarker(null)}
+        />
       ))}
 
-      {realNeighbors && realNeighbors.length > 0 ? (
+      {/* Neighbor markers */}
+      {realNeighbors.length > 0 ? (
         realNeighbors.map((neighbor) => (
           <NeighborMarker 
             key={neighbor.id} 
             neighbor={neighbor} 
-            detailed={true} 
+            detailed={true}
+            selected={selectedMarker === `neighbor-${neighbor.id}`}
+            onClick={() => handleNeighborClick(neighbor.id)}
+            onClose={() => setSelectedMarker(null)}
           />
         ))
       ) : (
@@ -93,25 +145,50 @@ const RegularMap: React.FC<RegularMapProps> = ({
           <NeighborMarker 
             key={neighbor.id} 
             neighbor={neighbor} 
-            detailed={false} 
+            detailed={false}
+            selected={selectedMarker === `neighbor-${neighbor.id}`}
+            onClick={() => handleNeighborClick(String(neighbor.id))}
+            onClose={() => setSelectedMarker(null)}
           />
         ))
       )}
 
+      {/* Spot markers */}
       {spots.map((spot) => (
-        <SpotMarker key={spot.id} spot={spot} onClick={onSpotClick} />
+        <SpotMarker 
+          key={spot.id} 
+          spot={spot} 
+          onClick={handleSpotClick}
+          selected={selectedMarker === `spot-${spot.id}`}
+          onClose={() => setSelectedMarker(null)}
+        />
       ))}
 
+      {/* Group markers */}
       {groups.map((group) => (
-        <GroupMarker key={group.id} group={group} onClick={onGroupClick} />
+        <GroupMarker 
+          key={group.id} 
+          group={group} 
+          onClick={handleGroupClick}
+          selected={selectedMarker === `group-${group.id}`}
+          onClose={() => setSelectedMarker(null)}
+        />
       ))}
       
+      {/* Ride markers */}
       {rides.map((ride) => (
-        <RideMarker key={ride.id} ride={ride} onClick={onRideClick} />
+        <RideMarker 
+          key={ride.id} 
+          ride={ride} 
+          onClick={handleRideClick}
+          selected={selectedMarker === `ride-${ride.id}`}
+          onClose={() => setSelectedMarker(null)}
+        />
       ))}
       
-      {withSearchBar && <MapSearch />}
-    </MapContainer>
+      {withSearchBar && <MapSearch onPlaceSelected={onPlaceSelected} />}
+      {mapRef.current && <MapCenterUpdater center={[mapCenter.lat, mapCenter.lng]} mapRef={mapRef} />}
+    </GoogleMap>
   );
 };
 

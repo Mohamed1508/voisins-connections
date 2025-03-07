@@ -1,17 +1,17 @@
 
 import React, { useEffect } from "react";
-import { useMap } from "react-leaflet";
 
 interface MapCenterUpdaterProps {
   center: [number, number];
+  mapRef: React.MutableRefObject<google.maps.Map | null>;
 }
 
-const MapCenterUpdater: React.FC<MapCenterUpdaterProps> = ({ center }) => {
-  const map = useMap();
-  
+const MapCenterUpdater: React.FC<MapCenterUpdaterProps> = ({ center, mapRef }) => {
   useEffect(() => {
-    map.setView(center, map.getZoom());
-  }, [center, map]);
+    if (mapRef.current) {
+      mapRef.current.panTo({ lat: center[0], lng: center[1] });
+    }
+  }, [center, mapRef]);
   
   return null;
 };

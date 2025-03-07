@@ -4,7 +4,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import LeafletProvider from "./LeafletProvider";
+import GoogleMapProvider from "./GoogleMapProvider";
 import PreviewMap from "./preview/PreviewMap";
 import RegularMap from "./regular/RegularMap";
 import LocationRequest from "./controls/LocationRequest";
@@ -33,10 +33,9 @@ const MapView: React.FC<MapViewProps> = ({
   const [selectedNeighbor, setSelectedNeighbor] = useState<number | null>(null);
   const { translations } = useLanguage();
   const { user } = useAuth();
-  const [mapCenter, setMapCenter] = useState<[number, number]>([userLocation.lat, userLocation.lng]);
+  const [userRealLocation, setUserRealLocation] = useState<{lat: number, lng: number} | null>(null);
   const [showLocationRequest, setShowLocationRequest] = useState(askLocation && !!user);
   const [realNeighbors, setRealNeighbors] = useState<any[]>([]);
-  const [userRealLocation, setUserRealLocation] = useState<{lat: number, lng: number} | null>(null);
   const { toast } = useToast();
 
   const handleNeighborClick = (neighborId: number) => {
@@ -63,7 +62,6 @@ const MapView: React.FC<MapViewProps> = ({
 
   const handleLocationGranted = (position: {lat: number, lng: number}) => {
     setUserRealLocation(position);
-    setMapCenter([position.lat, position.lng]);
     setShowLocationRequest(false);
     updateUserLocation(position);
     fetchNearbyUsers(position);
@@ -136,7 +134,6 @@ const MapView: React.FC<MapViewProps> = ({
           
           if (data && data.lat && data.lng) {
             setUserRealLocation({ lat: data.lat, lng: data.lng });
-            setMapCenter([data.lat, data.lng]);
             fetchNearbyUsers({ lat: data.lat, lng: data.lng });
             setShowLocationRequest(false);
           } else {
@@ -155,7 +152,7 @@ const MapView: React.FC<MapViewProps> = ({
   if (previewMode) {
     return (
       <div className="relative w-full h-full">
-        <LeafletProvider fallback={
+        <GoogleMapProvider fallback={
           <div className="w-full h-full bg-secondary/20 flex items-center justify-center rounded-xl">
             <div className="text-center p-4">
               <p className="font-medium mb-2">Chargement de la carte...</p>
@@ -164,14 +161,14 @@ const MapView: React.FC<MapViewProps> = ({
           </div>
         }>
           <PreviewMap withSearchBar={withSearchBar} />
-        </LeafletProvider>
+        </GoogleMapProvider>
       </div>
     );
   }
 
   return (
     <div className="relative">
-      <LeafletProvider fallback={
+      <GoogleMapProvider fallback={
         <div className="w-full h-[500px] bg-secondary/20 flex items-center justify-center rounded-xl">
           <div className="text-center p-4">
             <p className="font-medium mb-2">Chargement de la carte...</p>
@@ -195,7 +192,7 @@ const MapView: React.FC<MapViewProps> = ({
           withSearchBar={withSearchBar}
           realNeighbors={realNeighbors}
         />
-      </LeafletProvider>
+      </GoogleMapProvider>
       
       {showLocationRequest && (
         <LocationRequest onLocationGranted={handleLocationGranted} />

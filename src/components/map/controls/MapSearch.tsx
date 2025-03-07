@@ -1,54 +1,52 @@
 
 import React, { useState } from "react";
-import { useMap } from "react-leaflet";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Autocomplete } from "@react-google-maps/api";
 
-const MapSearch: React.FC = () => {
-  const [search, setSearch] = useState("");
-  const [isSearching, setIsSearching] = useState(false);
-  const map = useMap();
+interface MapSearchProps {
+  onPlaceSelected?: (location: {lat: number, lng: number}) => void;
+}
+
+const MapSearch: React.FC<MapSearchProps> = ({ onPlaceSelected }) => {
+  const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | null>(null);
   
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!search.trim()) return;
-    
-    setIsSearching(true);
-    try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(search)}`
-      );
-      const data = await response.json();
-      
-      if (data && data.length > 0) {
-        const { lat, lon } = data[0];
-        map.flyTo([parseFloat(lat), parseFloat(lon)], 13);
+  const onLoad = (autocompleteInstance: google.maps.places.Autocomplete) => {
+    setAutocomplete(autocompleteInstance);
+  };
+
+  const onPlaceChange = () => {
+    if (autocomplete !== null && onPlaceSelected) {
+      const place = autocomplete.getPlace();
+      if (place.geometry?.location) {
+        onPlaceSelected({
+          lat: place.geometry.location.lat(),
+          lng: place.geometry.location.lng()
+        });
       }
-    } catch (error) {
-      console.error("Error searching location:", error);
-    } finally {
-      setIsSearching(false);
     }
   };
   
   return (
     <div className="absolute top-2 left-2 right-2 z-[1000] bg-white rounded-md shadow-md">
-      <form onSubmit={handleSearch} className="flex items-center p-2">
-        <Input
-          type="text"
-          placeholder="Search location..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="flex-1"
-        />
-        <button 
-          type="submit" 
-          className="ml-2 bg-primary text-white p-2 rounded-md"
-          disabled={isSearching}
+      <div className="flex items-center p-2">
+        <Autocomplete
+          onLoad={onLoad}
+          onPlaceChanged={onPlaceChange}
+          restrictions={{ country: 'fr' }}
         >
-          <Search size={18} />
-        </button>
-      </form>
+          <div className="flex items-center w-full">
+            <Input
+              type="text"
+              placeholder="Rechercher un lieu..."
+              className="flex-1"
+            />
+            <div className="ml-2 bg-primary text-white p-2 rounded-md">
+              <Search size={18} />
+            </div>
+          </div>
+        </Autocomplete>
+      </div>
     </div>
   );
 };

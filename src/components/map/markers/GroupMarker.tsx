@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Marker, Popup } from "react-leaflet";
+import { Marker, InfoWindow } from "@react-google-maps/api";
 import { groupIcon } from "../leaflet/LeafletConfig";
 
 interface GroupMarkerProps {
@@ -12,24 +12,26 @@ interface GroupMarkerProps {
     description?: string;
   };
   onClick?: (group: any) => void;
+  selected?: boolean;
+  onClose?: () => void;
 }
 
-const GroupMarker: React.FC<GroupMarkerProps> = ({ group, onClick }) => {
+const GroupMarker: React.FC<GroupMarkerProps> = ({ group, onClick, selected, onClose }) => {
   return (
     <Marker
       key={group.id}
-      position={[group.lat, group.lng]}
+      position={{ lat: group.lat, lng: group.lng }}
       icon={groupIcon}
-      eventHandlers={{
-        click: () => onClick && onClick(group),
-      }}
+      onClick={() => onClick && onClick(group)}
     >
-      <Popup>
-        <div className="text-sm">
-          <p className="font-bold">{group.name}</p>
-          {group.description && <p className="text-xs">{group.description}</p>}
-        </div>
-      </Popup>
+      {selected && (
+        <InfoWindow onCloseClick={onClose}>
+          <div className="text-sm">
+            <p className="font-bold">{group.name}</p>
+            {group.description && <p className="text-xs">{group.description}</p>}
+          </div>
+        </InfoWindow>
+      )}
     </Marker>
   );
 };

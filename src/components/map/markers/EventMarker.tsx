@@ -1,8 +1,8 @@
 
 import React from "react";
-import { Marker, Popup } from "react-leaflet";
+import { Marker, InfoWindow } from "@react-google-maps/api";
 import { eventIcon } from "../leaflet/LeafletConfig";
-import { useLanguage } from "@/context/LanguageContext";
+import { formatDate } from "../utils/mapUtils";
 
 interface EventMarkerProps {
   event: {
@@ -12,32 +12,30 @@ interface EventMarkerProps {
     time: string;
     lat: number;
     lng: number;
-    createdBy: string;
+    createdBy?: string;
   };
   onClick?: (event: any) => void;
+  selected?: boolean;
+  onClose?: () => void;
 }
 
-const EventMarker: React.FC<EventMarkerProps> = ({ event, onClick }) => {
-  const { translations } = useLanguage();
-  
+const EventMarker: React.FC<EventMarkerProps> = ({ event, onClick, selected, onClose }) => {
   return (
     <Marker
       key={event.id}
-      position={[event.lat, event.lng]}
+      position={{ lat: event.lat, lng: event.lng }}
       icon={eventIcon}
-      eventHandlers={{
-        click: () => onClick && onClick(event),
-      }}
+      onClick={() => onClick && onClick(event)}
     >
-      <Popup>
-        <div className="text-sm">
-          <p className="font-bold">{event.name}</p>
-          <p>
-            {event.date} • {event.time}
-          </p>
-          <p className="text-xs text-gray-600">{translations.createdBy || "Créé par"}: {event.createdBy}</p>
-        </div>
-      </Popup>
+      {selected && (
+        <InfoWindow onCloseClick={onClose}>
+          <div className="text-sm">
+            <p className="font-bold">{event.name}</p>
+            <p className="text-xs">{formatDate(event.date)} • {event.time}</p>
+            {event.createdBy && <p className="text-xs text-gray-600">Par {event.createdBy}</p>}
+          </div>
+        </InfoWindow>
+      )}
     </Marker>
   );
 };

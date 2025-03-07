@@ -1,44 +1,43 @@
 
 import React from "react";
-import { Marker, Popup } from "react-leaflet";
+import { Marker, InfoWindow } from "@react-google-maps/api";
 import { rideIcon } from "../leaflet/LeafletConfig";
-import { useLanguage } from "@/context/LanguageContext";
+import { formatDate } from "../utils/mapUtils";
 
 interface RideMarkerProps {
   ride: {
     id: string;
     name: string;
+    date: string;
+    time: string;
     departure: string;
     arrival: string;
-    date: string;
-    availableSeats: number;
+    available_seats: number;
     lat: number;
     lng: number;
-    createdBy: string;
   };
   onClick?: (ride: any) => void;
+  selected?: boolean;
+  onClose?: () => void;
 }
 
-const RideMarker: React.FC<RideMarkerProps> = ({ ride, onClick }) => {
-  const { translations } = useLanguage();
-  
+const RideMarker: React.FC<RideMarkerProps> = ({ ride, onClick, selected, onClose }) => {
   return (
     <Marker
       key={ride.id}
-      position={[ride.lat, ride.lng]}
+      position={{ lat: ride.lat, lng: ride.lng }}
       icon={rideIcon}
-      eventHandlers={{
-        click: () => onClick && onClick(ride),
-      }}
+      onClick={() => onClick && onClick(ride)}
     >
-      <Popup>
-        <div className="text-sm">
-          <p className="font-bold">{ride.name}</p>
-          <p className="text-xs">{ride.departure} → {ride.arrival}</p>
-          <p className="text-xs">{ride.date} • {ride.availableSeats} places</p>
-          <p className="text-xs text-gray-600">{translations.createdBy || "Créé par"}: {ride.createdBy}</p>
-        </div>
-      </Popup>
+      {selected && (
+        <InfoWindow onCloseClick={onClose}>
+          <div className="text-sm">
+            <p className="font-bold">{ride.name}</p>
+            <p className="text-xs">{ride.departure} → {ride.arrival}</p>
+            <p className="text-xs">{formatDate(ride.date)} • {ride.available_seats} places</p>
+          </div>
+        </InfoWindow>
+      )}
     </Marker>
   );
 };
