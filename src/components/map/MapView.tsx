@@ -4,7 +4,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import GoogleMapProvider from "./GoogleMapProvider";
+import LeafletProvider from "./LeafletProvider";
 import PreviewMap from "./preview/PreviewMap";
 import RegularMap from "./regular/RegularMap";
 import LocationRequest from "./controls/LocationRequest";
@@ -152,7 +152,7 @@ const MapView: React.FC<MapViewProps> = ({
   if (previewMode) {
     return (
       <div className="relative w-full h-full">
-        <GoogleMapProvider fallback={
+        <LeafletProvider fallback={
           <div className="w-full h-full bg-secondary/20 flex items-center justify-center rounded-xl">
             <div className="text-center p-4">
               <p className="font-medium mb-2">Chargement de la carte...</p>
@@ -161,14 +161,14 @@ const MapView: React.FC<MapViewProps> = ({
           </div>
         }>
           <PreviewMap withSearchBar={withSearchBar} />
-        </GoogleMapProvider>
+        </LeafletProvider>
       </div>
     );
   }
 
   return (
     <div className="relative">
-      <GoogleMapProvider fallback={
+      <LeafletProvider fallback={
         <div className="w-full h-[500px] bg-secondary/20 flex items-center justify-center rounded-xl">
           <div className="text-center p-4">
             <p className="font-medium mb-2">Chargement de la carte...</p>
@@ -192,7 +192,7 @@ const MapView: React.FC<MapViewProps> = ({
           withSearchBar={withSearchBar}
           realNeighbors={realNeighbors}
         />
-      </GoogleMapProvider>
+      </LeafletProvider>
       
       {showLocationRequest && (
         <LocationRequest onLocationGranted={handleLocationGranted} />

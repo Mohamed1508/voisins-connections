@@ -1,8 +1,7 @@
 
 import React, { useRef, useState, useCallback } from "react";
-import { GoogleMap, Circle } from "@react-google-maps/api";
+import LeafletMap from "../LeafletMap";
 import { useLanguage } from "@/context/LanguageContext";
-import MapCenterUpdater from "../controls/MapCenterUpdater";
 import MapSearch from "../controls/MapSearch";
 import { kmToMeters } from "../utils/mapUtils";
 import NeighborMarker from "../markers/NeighborMarker";
@@ -10,19 +9,13 @@ import EventMarker from "../markers/EventMarker";
 import SpotMarker from "../markers/SpotMarker";
 import GroupMarker from "../markers/GroupMarker";
 import RideMarker from "../markers/RideMarker";
-import { mapStyles } from "../leaflet/LeafletConfig";
+import PopupPortal from "../PopupPortal";
 import { MapViewProps } from "../types/MapViewTypes";
 
 interface RegularMapProps extends Omit<MapViewProps, 'previewMode' | 'askLocation'> {
   userRealLocation: { lat: number; lng: number } | null;
   realNeighbors?: any[];
 }
-
-const mapContainerStyle = {
-  height: "500px",
-  width: "100%",
-  borderRadius: "0.5rem"
-};
 
 const RegularMap: React.FC<RegularMapProps> = ({
   userLocation,
@@ -41,18 +34,18 @@ const RegularMap: React.FC<RegularMapProps> = ({
   realNeighbors = []
 }) => {
   const { translations } = useLanguage();
-  const mapRef = useRef<google.maps.Map | null>(null);
+  const mapRef = useRef<any>(null);
   const [selectedMarker, setSelectedMarker] = useState<string | null>(null);
   
   const location = userRealLocation || userLocation;
-  const mapCenter = { lat: location.lat, lng: location.lng };
+  const mapCenter: [number, number] = [location.lat, location.lng];
   
-  const onMapLoad = (map: google.maps.Map) => {
+  const onMapLoad = (map: any) => {
     mapRef.current = map;
   };
 
   const onPlaceSelected = (location: {lat: number, lng: number}) => {
-    mapRef.current?.panTo(location);
+    mapRef.current?.setView([location.lat, location.lng], 13);
   };
 
   const handleNeighborClick = useCallback((id: string) => {
@@ -79,126 +72,152 @@ const RegularMap: React.FC<RegularMapProps> = ({
     setSelectedMarker(selectedMarker === `ride-${ride.id}` ? null : `ride-${ride.id}`);
   }, [onRideClick, selectedMarker]);
 
-  return (
-    <GoogleMap
-      mapContainerStyle={mapContainerStyle}
-      center={mapCenter}
-      zoom={13}
-      onLoad={onMapLoad}
-      options={{
-        styles: mapStyles,
-        zoomControl: true,
-        streetViewControl: false,
-        mapTypeControl: false
-      }}
-    >
-      {/* User location marker */}
-      <NeighborMarker
-        neighbor={{
-          id: "user",
-          name: translations.yourLocation || "Votre position",
-          lat: location.lat,
-          lng: location.lng
-        }}
-        selected={selectedMarker === "user-location"}
-        onClick={() => setSelectedMarker(selectedMarker === "user-location" ? null : "user-location")}
-        onClose={() => setSelectedMarker(null)}
-      />
+  // Prepare markers for LeafletMap
+  const markers = [
+    // User location marker
+    {
+      id: "user-location",
+      type: 'user' as const,
+      position: [location.lat, location.lng] as [number, number],
+      onClick: () => setSelectedMarker(selectedMarker === "user-location" ? null : "user-location")
+    },
+    
+    // Event markers
+    ...events.map(event => ({
+      id: `event-${event.id}`,
+      type: 'event' as const,
+      position: [event.lat, event.lng] as [number, number],
+      onClick: () => handleEventClick(event)
+    })),
+    
+    // Neighbor markers
+    ...(realNeighbors.length > 0 ? realNeighbors : neighbors).map(neighbor => ({
+      id: `neighbor-${neighbor.id}`,
+      type: 'user' as const,
+      position: [neighbor.lat, neighbor.lng] as [number, number],
+      onClick: () => handleNeighborClick(String(neighbor.id))
+    })),
+    
+    // Spot markers
+    ...spots.map(spot => ({
+      id: `spot-${spot.id}`,
+      type: 'spot' as const,
+      position: [spot.lat, spot.lng] as [number, number],
+      onClick: () => handleSpotClick(spot)
+    })),
+    
+    // Group markers
+    ...groups.map(group => ({
+      id: `group-${group.id}`,
+      type: 'group' as const,
+      position: [group.lat, group.lng] as [number, number],
+      onClick: () => handleGroupClick(group)
+    })),
+    
+    // Ride markers
+    ...rides.map(ride => ({
+      id: `ride-${ride.id}`,
+      type: 'ride' as const,
+      position: [ride.lat, ride.lng] as [number, number],
+      onClick: () => handleRideClick(ride)
+    }))
+  ];
 
-      {/* Search radius circle */}
-      <Circle
+  return (
+    <>
+      <LeafletMap
         center={mapCenter}
-        options={{
-          fillColor: "#3b82f6",
-          fillOpacity: 0.1,
-          strokeColor: "#3b82f6",
-          strokeWeight: 1,
+        markers={markers}
+        circle={{
+          center: mapCenter,
           radius: kmToMeters(searchRadius)
         }}
-      />
-
-      {/* Event markers */}
-      {events.map((event) => (
-        <EventMarker 
-          key={event.id} 
-          event={event} 
-          onClick={handleEventClick}
-          selected={selectedMarker === `event-${event.id}`}
-          onClose={() => setSelectedMarker(null)}
-        />
-      ))}
-
-      {/* Neighbor markers */}
-      {realNeighbors.length > 0 ? (
-        realNeighbors.map((neighbor) => (
-          <NeighborMarker 
-            key={neighbor.id} 
-            neighbor={neighbor} 
-            detailed={true}
-            selected={selectedMarker === `neighbor-${neighbor.id}`}
-            onClick={() => handleNeighborClick(neighbor.id)}
-            onClose={() => setSelectedMarker(null)}
-          />
-        ))
-      ) : (
-        neighbors.map((neighbor) => (
-          <NeighborMarker 
-            key={neighbor.id} 
-            neighbor={neighbor} 
-            detailed={false}
-            selected={selectedMarker === `neighbor-${neighbor.id}`}
-            onClick={() => handleNeighborClick(String(neighbor.id))}
-            onClose={() => setSelectedMarker(null)}
-          />
-        ))
-      )}
-
-      {/* Spot markers */}
-      {spots.map((spot) => (
-        <SpotMarker 
-          key={spot.id} 
-          spot={spot} 
-          onClick={handleSpotClick}
-          selected={selectedMarker === `spot-${spot.id}`}
-          onClose={() => setSelectedMarker(null)}
-        />
-      ))}
-
-      {/* Group markers */}
-      {groups.map((group) => (
-        <GroupMarker 
-          key={group.id} 
-          group={group} 
-          onClick={handleGroupClick}
-          selected={selectedMarker === `group-${group.id}`}
-          onClose={() => setSelectedMarker(null)}
-        />
-      ))}
-      
-      {/* Ride markers */}
-      {rides.map((ride: any) => (
-        <RideMarker 
-          key={ride.id} 
-          ride={{
-            id: ride.id,
-            name: ride.name,
-            departure: ride.departure || "",
-            arrival: ride.arrival || "",
-            date: ride.date || "",
-            time: ride.time || "",
-            available_seats: ride.available_seats || 0,
-            lat: ride.lat,
-            lng: ride.lng
-          }} 
-          onClick={handleRideClick}
-          selected={selectedMarker === `ride-${ride.id}`}
-          onClose={() => setSelectedMarker(null)}
-        />
-      ))}
+        onMapReady={onMapLoad}
+        style={{ height: '500px', width: '100%', borderRadius: '0.5rem' }}
+      >
+        {/* Popup contents via portal */}
+        {selectedMarker === "user-location" && (
+          <PopupPortal markerId="user-location">
+            <div className="text-sm">
+              <p className="font-bold">{translations.yourLocation || "Votre position"}</p>
+            </div>
+          </PopupPortal>
+        )}
+        
+        {/* Event popups */}
+        {events.map(event => (
+          selectedMarker === `event-${event.id}` && (
+            <PopupPortal key={`event-popup-${event.id}`} markerId={`event-${event.id}`}>
+              <EventMarker 
+                event={event}
+                selected={true}
+              />
+            </PopupPortal>
+          )
+        ))}
+        
+        {/* Neighbor popups */}
+        {(realNeighbors.length > 0 ? realNeighbors : neighbors).map(neighbor => (
+          selectedMarker === `neighbor-${neighbor.id}` && (
+            <PopupPortal key={`neighbor-popup-${neighbor.id}`} markerId={`neighbor-${neighbor.id}`}>
+              <NeighborMarker 
+                neighbor={neighbor}
+                detailed={realNeighbors.length > 0}
+                selected={true}
+              />
+            </PopupPortal>
+          )
+        ))}
+        
+        {/* Spot popups */}
+        {spots.map(spot => (
+          selectedMarker === `spot-${spot.id}` && (
+            <PopupPortal key={`spot-popup-${spot.id}`} markerId={`spot-${spot.id}`}>
+              <SpotMarker 
+                spot={spot}
+                selected={true}
+              />
+            </PopupPortal>
+          )
+        ))}
+        
+        {/* Group popups */}
+        {groups.map(group => (
+          selectedMarker === `group-${group.id}` && (
+            <PopupPortal key={`group-popup-${group.id}`} markerId={`group-${group.id}`}>
+              <GroupMarker 
+                group={group}
+                selected={true}
+              />
+            </PopupPortal>
+          )
+        ))}
+        
+        {/* Ride popups */}
+        {rides.map(ride => (
+          selectedMarker === `ride-${ride.id}` && (
+            <PopupPortal key={`ride-popup-${ride.id}`} markerId={`ride-${ride.id}`}>
+              <RideMarker 
+                ride={{
+                  id: ride.id,
+                  name: ride.name,
+                  departure: ride.departure || "",
+                  arrival: ride.arrival || "",
+                  date: ride.date || "",
+                  time: ride.time || "",
+                  available_seats: ride.available_seats || 0,
+                  lat: ride.lat,
+                  lng: ride.lng
+                }}
+                selected={true}
+              />
+            </PopupPortal>
+          )
+        ))}
+      </LeafletMap>
       
       {withSearchBar && <MapSearch onPlaceSelected={onPlaceSelected} />}
-      {mapRef.current && <MapCenterUpdater center={[mapCenter.lat, mapCenter.lng]} mapRef={mapRef} />}
-    </GoogleMap>
+    </>
   );
 };
 

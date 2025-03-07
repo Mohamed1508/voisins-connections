@@ -1,36 +1,51 @@
 
 import { MapPinIcon, Users, Tent, Utensils, Car } from "lucide-react";
 
-// Custom markers for different entity types - defined without direct Google Maps reference
+// Constants for marker size
+export const ICON_SIZE = 32;
+
+// Custom marker paths
+export const DEFAULT_MARKER = '/map-markers/blue-marker.png';
+export const SPOT_MARKER = '/map-markers/green-marker.png';
+export const EVENT_MARKER = '/map-markers/red-marker.png';
+export const GROUP_MARKER = '/map-markers/purple-marker.png';
+export const RIDE_MARKER = '/map-markers/yellow-marker.png';
+
+// Icons for different entity types that will be used with Leaflet
 export const DefaultIcon = {
-  url: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png",
-  scaledSize: { width: 32, height: 32 }
+  url: DEFAULT_MARKER,
+  iconSize: [ICON_SIZE, ICON_SIZE]
 };
 
 export const spotIcon = {
-  url: "https://maps.google.com/mapfiles/ms/icons/green-dot.png",
-  scaledSize: { width: 32, height: 32 }
+  url: SPOT_MARKER,
+  iconSize: [ICON_SIZE, ICON_SIZE]
 };
 
 export const eventIcon = {
-  url: "https://maps.google.com/mapfiles/ms/icons/red-dot.png",
-  scaledSize: { width: 32, height: 32 }
+  url: EVENT_MARKER,
+  iconSize: [ICON_SIZE, ICON_SIZE]
 };
 
 export const groupIcon = {
-  url: "https://maps.google.com/mapfiles/ms/icons/purple-dot.png",
-  scaledSize: { width: 32, height: 32 }
+  url: GROUP_MARKER,
+  iconSize: [ICON_SIZE, ICON_SIZE]
 };
 
 export const rideIcon = {
-  url: "https://maps.google.com/mapfiles/ms/icons/yellow-dot.png",
-  scaledSize: { width: 32, height: 32 }
+  url: RIDE_MARKER,
+  iconSize: [ICON_SIZE, ICON_SIZE]
 };
 
-export const mapStyles = [
-  {
-    featureType: "poi",
-    elementType: "labels",
-    stylers: [{ visibility: "off" }]
+// Create Leaflet icon instances
+export const createLeafletIcon = (iconConfig: { url: string, iconSize: number[] }) => {
+  if (typeof window !== 'undefined' && window.L) {
+    return window.L.icon({
+      iconUrl: iconConfig.url,
+      iconSize: iconConfig.iconSize,
+      iconAnchor: [iconConfig.iconSize[0] / 2, iconConfig.iconSize[1]],
+      popupAnchor: [0, -iconConfig.iconSize[1]]
+    });
   }
-];
+  return null;
+};

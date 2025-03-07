@@ -1,7 +1,5 @@
 
 import React from "react";
-import { Marker, InfoWindow } from "@react-google-maps/api";
-import { groupIcon } from "../leaflet/LeafletConfig";
 
 interface GroupMarkerProps {
   group: {
@@ -17,22 +15,16 @@ interface GroupMarkerProps {
 }
 
 const GroupMarker: React.FC<GroupMarkerProps> = ({ group, onClick, selected, onClose }) => {
+  // The actual marker implementation is handled in the LeafletMap component
+  // This component is used to render the content of the popup
+  
+  if (!selected) return null;
+
   return (
-    <Marker
-      key={group.id}
-      position={{ lat: group.lat, lng: group.lng }}
-      icon={groupIcon}
-      onClick={() => onClick && onClick(group)}
-    >
-      {selected && (
-        <InfoWindow onCloseClick={onClose}>
-          <div className="text-sm">
-            <p className="font-bold">{group.name}</p>
-            {group.description && <p className="text-xs">{group.description}</p>}
-          </div>
-        </InfoWindow>
-      )}
-    </Marker>
+    <div className="text-sm">
+      <p className="font-bold">{group.name}</p>
+      {group.description && <p className="text-xs">{group.description}</p>}
+    </div>
   );
 };
 
