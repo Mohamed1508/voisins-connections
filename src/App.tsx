@@ -34,7 +34,9 @@ const queryClient = new QueryClient({
 function App() {
   useEffect(() => {
     // Seed database with test data for demonstration purposes
-    seedDatabaseWithTestData();
+    seedDatabaseWithTestData()
+      .then(() => console.log("Database seeding process completed"))
+      .catch(error => console.error("Error in database seeding:", error));
   }, []);
 
   return (

@@ -1,30 +1,30 @@
 
 import { MapPinIcon, Users, Tent, Utensils, Car } from "lucide-react";
 
-// Custom markers for different entity types
+// Custom markers for different entity types - defined without direct Google Maps reference
 export const DefaultIcon = {
   url: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png",
-  scaledSize: new google.maps.Size(32, 32)
+  scaledSize: { width: 32, height: 32 }
 };
 
 export const spotIcon = {
   url: "https://maps.google.com/mapfiles/ms/icons/green-dot.png",
-  scaledSize: new google.maps.Size(32, 32)
+  scaledSize: { width: 32, height: 32 }
 };
 
 export const eventIcon = {
   url: "https://maps.google.com/mapfiles/ms/icons/red-dot.png",
-  scaledSize: new google.maps.Size(32, 32)
+  scaledSize: { width: 32, height: 32 }
 };
 
 export const groupIcon = {
   url: "https://maps.google.com/mapfiles/ms/icons/purple-dot.png",
-  scaledSize: new google.maps.Size(32, 32)
+  scaledSize: { width: 32, height: 32 }
 };
 
 export const rideIcon = {
   url: "https://maps.google.com/mapfiles/ms/icons/yellow-dot.png",
-  scaledSize: new google.maps.Size(32, 32)
+  scaledSize: { width: 32, height: 32 }
 };
 
 export const mapStyles = [

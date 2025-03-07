@@ -176,10 +176,20 @@ const RegularMap: React.FC<RegularMapProps> = ({
       ))}
       
       {/* Ride markers */}
-      {rides.map((ride) => (
+      {rides.map((ride: any) => (
         <RideMarker 
           key={ride.id} 
-          ride={ride} 
+          ride={{
+            id: ride.id,
+            name: ride.name,
+            departure: ride.departure || "",
+            arrival: ride.arrival || "",
+            date: ride.date || "",
+            time: ride.time || "",
+            available_seats: ride.available_seats || 0,
+            lat: ride.lat,
+            lng: ride.lng
+          }} 
           onClick={handleRideClick}
           selected={selectedMarker === `ride-${ride.id}`}
           onClose={() => setSelectedMarker(null)}

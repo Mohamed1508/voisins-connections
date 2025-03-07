@@ -4,6 +4,8 @@ import { LoadScript } from '@react-google-maps/api';
 
 const GOOGLE_MAPS_API_KEY = "AIzaSyC8jg6OhZ55oi4GqKCWV5S3KS8U9QR1NuA"; // Using public API key for demo purposes
 
+const libraries = ["places"];
+
 interface GoogleMapProviderProps {
   children: ReactNode;
   fallback?: ReactNode;
@@ -31,6 +33,7 @@ const GoogleMapProvider: React.FC<GoogleMapProviderProps> = ({
   return (
     <LoadScript
       googleMapsApiKey={GOOGLE_MAPS_API_KEY}
+      libraries={libraries as any}
       loadingElement={fallback}
     >
       {children}
