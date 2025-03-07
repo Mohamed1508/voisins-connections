@@ -14,31 +14,31 @@ export const RIDE_MARKER = '/map-markers/yellow-marker.png';
 // Icons for different entity types that will be used with Leaflet
 export const DefaultIcon = {
   url: DEFAULT_MARKER,
-  iconSize: [ICON_SIZE, ICON_SIZE]
+  iconSize: [ICON_SIZE, ICON_SIZE] as [number, number]
 };
 
 export const spotIcon = {
   url: SPOT_MARKER,
-  iconSize: [ICON_SIZE, ICON_SIZE]
+  iconSize: [ICON_SIZE, ICON_SIZE] as [number, number]
 };
 
 export const eventIcon = {
   url: EVENT_MARKER,
-  iconSize: [ICON_SIZE, ICON_SIZE]
+  iconSize: [ICON_SIZE, ICON_SIZE] as [number, number]
 };
 
 export const groupIcon = {
   url: GROUP_MARKER,
-  iconSize: [ICON_SIZE, ICON_SIZE]
+  iconSize: [ICON_SIZE, ICON_SIZE] as [number, number]
 };
 
 export const rideIcon = {
   url: RIDE_MARKER,
-  iconSize: [ICON_SIZE, ICON_SIZE]
+  iconSize: [ICON_SIZE, ICON_SIZE] as [number, number]
 };
 
 // Create Leaflet icon instances
-export const createLeafletIcon = (iconConfig: { url: string, iconSize: number[] }) => {
+export const createLeafletIcon = (iconConfig: { url: string, iconSize: [number, number] }) => {
   if (typeof window !== 'undefined' && window.L) {
     return window.L.icon({
       iconUrl: iconConfig.url,

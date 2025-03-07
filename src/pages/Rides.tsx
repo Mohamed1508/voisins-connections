@@ -1,8 +1,6 @@
-
 import React, { useEffect, useState } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { useLanguage } from "@/context/LanguageContext";
-import { GoogleMap } from "@react-google-maps/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -11,10 +9,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import RideForm from "@/components/rides/RideForm";
-import { spotIcon, rideIcon, mapStyles } from "@/components/map/leaflet/LeafletConfig";
+import { spotIcon, rideIcon } from "@/components/map/leaflet/LeafletConfig";
 import { Link } from "react-router-dom";
 import RideMarker from "@/components/map/markers/RideMarker";
-import GoogleMapProvider from "@/components/map/GoogleMapProvider";
+import LeafletProvider from "@/components/map/LeafletProvider";
+import LeafletMap from "@/components/map/LeafletMap";
 import SpotMarker from "@/components/map/markers/SpotMarker";
 
 const mapContainerStyle = {
@@ -32,7 +31,6 @@ const Rides = () => {
   const [showForm, setShowForm] = useState(false);
   const [position, setPosition] = useState({ lat: 48.8566, lng: 2.3522 });
   const [selectedRide, setSelectedRide] = useState<string | null>(null);
-  const [mapRef, setMapRef] = useState<google.maps.Map | null>(null);
 
   useEffect(() => {
     fetchRides();
@@ -42,7 +40,6 @@ const Rides = () => {
     try {
       setLoading(true);
       
-      // Fetch all rides
       const { data: allRides, error } = await supabase
         .from('rides')
         .select('*, users:created_by(username, avatar_url)')
@@ -50,7 +47,6 @@ const Rides = () => {
       
       if (error) throw error;
       
-      // If user is logged in, fetch their rides
       if (user) {
         const { data: userRides, error: userError } = await supabase
           .from('rides')
@@ -74,9 +70,9 @@ const Rides = () => {
     }
   };
 
-  const handleMapClick = (e: google.maps.MapMouseEvent) => {
-    if (showForm && e.latLng) {
-      setPosition({ lat: e.latLng.lat(), lng: e.latLng.lng() });
+  const handleMapClick = (e: any) => {
+    if (showForm && e.latlng) {
+      setPosition({ lat: e.latlng.lat, lng: e.latlng.lng });
     }
   };
 
@@ -88,54 +84,6 @@ const Rides = () => {
   const handleRideClick = (ride: any) => {
     setSelectedRide(selectedRide === ride.id ? null : ride.id);
   };
-
-  const onMapLoad = (map: google.maps.Map) => {
-    setMapRef(map);
-  };
-
-  const RideCard = ({ ride }: { ride: any }) => (
-    <Card className="mb-4 hover:shadow-md transition-shadow">
-      <CardHeader className="pb-2">
-        <div className="flex justify-between items-start">
-          <div>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Car className="h-5 w-5 text-primary" />
-              {ride.name}
-            </CardTitle>
-            <CardDescription className="flex items-center mt-1">
-              <span className="flex items-center">
-                <Calendar className="h-4 w-4 mr-1" />
-                {formatDate(ride.date)}
-              </span>
-              <span className="mx-2">•</span>
-              <span className="flex items-center">
-                <Clock className="h-4 w-4 mr-1" />
-                {ride.time}
-              </span>
-            </CardDescription>
-          </div>
-          <div className="bg-primary/10 text-primary rounded-full px-3 py-1 text-sm font-medium flex items-center">
-            <Users className="h-4 w-4 mr-1" />
-            {ride.available_seats} {ride.available_seats === 1 ? 'seat' : 'seats'}
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="flex items-center text-sm text-muted-foreground mb-2">
-          <MapPin className="h-4 w-4 mr-1 flex-shrink-0" />
-          <span className="font-medium">{ride.departure}</span>
-          <ArrowRight className="h-3 w-3 mx-2" />
-          <span className="font-medium">{ride.arrival}</span>
-        </div>
-        
-        <div className="flex items-center mt-3 text-xs text-muted-foreground">
-          <span>
-            {translations.createdBy}: {ride.users?.username || "Anonymous"}
-          </span>
-        </div>
-      </CardContent>
-    </Card>
-  );
 
   return (
     <MainLayout>
@@ -154,34 +102,20 @@ const Rides = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-          {/* Map */}
           <div className="lg:col-span-3 relative rounded-lg overflow-hidden shadow-md h-[500px]">
-            <GoogleMapProvider>
-              <GoogleMap
-                mapContainerStyle={mapContainerStyle}
-                center={position}
+            <LeafletProvider>
+              <LeafletMap
+                center={[position.lat, position.lng]}
                 zoom={13}
                 onClick={handleMapClick}
-                onLoad={onMapLoad}
-                options={{
-                  styles: mapStyles,
-                  zoomControl: true,
-                  streetViewControl: false,
-                  mapTypeControl: false
-                }}
+                markers={rides.map((ride) => ({
+                  id: ride.id,
+                  type: 'ride' as const,
+                  position: [ride.lat, ride.lng] as [number, number],
+                  onClick: () => handleRideClick(ride)
+                }))}
+                onMapReady={(map) => {/* Handle map ready */}}
               >
-                {/* Ride markers */}
-                {rides.map((ride) => (
-                  <RideMarker 
-                    key={ride.id} 
-                    ride={ride}
-                    onClick={handleRideClick}
-                    selected={selectedRide === ride.id}
-                    onClose={() => setSelectedRide(null)}
-                  />
-                ))}
-                
-                {/* Position marker when creating a ride */}
                 {showForm && (
                   <SpotMarker 
                     spot={{
@@ -194,8 +128,8 @@ const Rides = () => {
                     selected={true}
                   />
                 )}
-              </GoogleMap>
-            </GoogleMapProvider>
+              </LeafletMap>
+            </LeafletProvider>
             
             {showForm && (
               <div className="absolute bottom-0 left-0 right-0 bg-background/90 backdrop-blur-sm">
@@ -207,7 +141,6 @@ const Rides = () => {
             )}
           </div>
           
-          {/* Rides list */}
           <div className="lg:col-span-2">
             {user ? (
               <Tabs defaultValue="all">

@@ -1,18 +1,22 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import MainLayout from "@/components/layout/MainLayout";
+import { useLanguage } from "@/context/LanguageContext";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Users, Calendar, MapPin, Clock, ArrowRight, Plus } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MapPin, Users, Plus, Calendar, Check, X } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/context/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
-import { useLanguage } from "@/context/LanguageContext";
-import MapView from "@/components/map/MapView";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Link } from "react-router-dom";
+import LeafletProvider from "@/components/map/LeafletProvider";
+import LeafletMap from "@/components/map/LeafletMap";
+import GroupMarker from "@/components/map/markers/GroupMarker";
 
 interface Group {
   id: string;
@@ -47,6 +51,11 @@ const Groups = () => {
   const [newGroupLng, setNewGroupLng] = useState<number | null>(null);
   const [selectedGroupLocation, setSelectedGroupLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [showGroupForm, setShowGroupForm] = useState(false);
+  const [position, setPosition] = useState({ lat: 48.8566, lng: 2.3522 });
+  const [newGroupLocation, setNewGroupLocation] = useState("");
+  const [joining, setJoining] = useState(false);
+  const [creating, setCreating] = useState(false);
 
   useEffect(() => {
     fetchGroups();
@@ -105,125 +114,153 @@ const Groups = () => {
     }
   };
 
-  const createGroup = async () => {
-    if (!user || !newGroupName || !newGroupDescription || !selectedGroupLocation) {
-      toast({
-        title: "Erreur",
-        description: "Veuillez remplir tous les champs et sélectionner un emplacement.",
-        variant: "destructive",
-      });
-      return;
-    }
-
+  const createGroup = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    
+    if (!user) return;
+    
     try {
-      const { data: group, error } = await supabase
+      setCreating(true);
+      
+      // Create the group
+      const { data: newGroup, error: groupError } = await supabase
         .from('groups')
         .insert([
           {
             name: newGroupName,
             description: newGroupDescription,
+            location: newGroupLocation,
             created_by: user.id,
-            lat: selectedGroupLocation.lat,
-            lng: selectedGroupLocation.lng
+            lat: position.lat,
+            lng: position.lng
           }
         ])
-        .select();
-
-      if (error) throw error;
-
-      if (group && group.length > 0) {
-        // Add the creator as an admin member
-        await supabase
-          .from('group_members')
-          .insert([
-            {
-              group_id: group[0].id,
-              user_id: user.id,
-              is_admin: true
-            }
-          ]);
-
-        toast({
-          title: "Succès",
-          description: "Groupe créé avec succès!",
-        });
-
-        fetchGroups();
-        fetchMyGroups();
-        setIsCreateModalOpen(false);
-        setNewGroupName("");
-        setNewGroupDescription("");
-        setSelectedGroupLocation(null);
-      }
-    } catch (error: any) {
-      console.error("Error creating group:", error);
+        .select()
+        .single();
+        
+      if (groupError) throw groupError;
+      
+      // Add creator as admin member
+      const { error: memberError } = await supabase
+        .from('group_members')
+        .insert([
+          {
+            group_id: newGroup.id,
+            user_id: user.id,
+            role: 'admin',
+            is_admin: true
+          }
+        ]);
+        
+      if (memberError) throw memberError;
+      
       toast({
-        title: "Erreur",
-        description: "Impossible de créer le groupe. Veuillez réessayer.",
+        title: "Group created!",
+        description: "Your new group has been created successfully",
+      });
+      
+      setShowGroupForm(false);
+      setNewGroupName('');
+      setNewGroupDescription('');
+      setNewGroupLocation('');
+      
+      fetchGroups();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create group",
         variant: "destructive",
       });
+    } finally {
+      setCreating(false);
     }
   };
 
   const joinGroup = async (groupId: string) => {
     if (!user) return;
-
+    
     try {
-      const { data, error } = await supabase
+      setJoining(true);
+      
+      // Check if already a member
+      const { data: existingMember, error: checkError } = await supabase
+        .from('group_members')
+        .select('*')
+        .eq('group_id', groupId)
+        .eq('user_id', user.id)
+        .single();
+        
+      if (checkError && checkError.code !== 'PGRST116') {
+        throw checkError;
+      }
+      
+      if (existingMember) {
+        toast({
+          title: "Already a member",
+          description: "You are already a member of this group",
+        });
+        return;
+      }
+      
+      // Add as member
+      const { error } = await supabase
         .from('group_members')
         .insert([
           {
             group_id: groupId,
             user_id: user.id,
+            role: 'member',
             is_admin: false
           }
         ]);
-
+        
       if (error) throw error;
-
+      
       toast({
-        title: "Succès",
-        description: "Vous avez rejoint le groupe avec succès!",
+        title: "Success!",
+        description: "You have joined the group successfully",
       });
-
+      
       fetchGroups();
-      fetchMyGroups();
     } catch (error: any) {
-      console.error("Error joining group:", error);
       toast({
-        title: "Erreur",
-        description: "Impossible de rejoindre le groupe. Veuillez réessayer.",
+        title: "Error",
+        description: error.message || "Failed to join group",
         variant: "destructive",
       });
+    } finally {
+      setJoining(false);
     }
   };
-
+  
   const leaveGroup = async (groupId: string) => {
     if (!user) return;
-
+    
     try {
+      setJoining(true);
+      
       const { error } = await supabase
         .from('group_members')
         .delete()
         .eq('group_id', groupId)
         .eq('user_id', user.id);
-
+        
       if (error) throw error;
-
+      
       toast({
-        title: "Succès",
-        description: "Vous avez quitté le groupe avec succès!",
+        title: "Left group",
+        description: "You have left the group successfully",
       });
-
+      
       fetchGroups();
-      fetchMyGroups();
     } catch (error: any) {
-      console.error("Error leaving group:", error);
       toast({
-        title: "Erreur",
-        description: "Impossible de quitter le groupe. Veuillez réessayer.",
+        title: "Error",
+        description: error.message || "Failed to leave group",
         variant: "destructive",
       });
+    } finally {
+      setJoining(false);
     }
   };
 
@@ -307,13 +344,15 @@ const Groups = () => {
                   </label>
                   <div className="col-span-3">
                     <div className="h-[200px] rounded-lg overflow-hidden">
-                      <MapView
-                        previewMode={true}
-                        userLocation={{ lat: 48.8566, lng: 2.3522 }}
-                        neighbors={[]}
-                        events={[]}
-                        withSearchBar={true}
-                      />
+                      <LeafletProvider>
+                        <LeafletMap
+                          previewMode={true}
+                          userLocation={{ lat: 48.8566, lng: 2.3522 }}
+                          neighbors={[]}
+                          events={[]}
+                          withSearchBar={true}
+                        />
+                      </LeafletProvider>
                     </div>
                   </div>
                 </div>

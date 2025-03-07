@@ -51,10 +51,11 @@ export interface RideType {
   departure: string;
   arrival: string;
   date: string;
-  availableSeats: number;
+  time: string;
+  available_seats: number;
   lat: number;
   lng: number;
-  createdBy: string;
+  createdBy?: string;
 }
 
 export interface MapViewProps {
