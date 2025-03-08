@@ -251,6 +251,7 @@ export type Database = {
           languages: string[] | null
           lat: number | null
           lng: number | null
+          neighborhood_images: string[] | null
           origin_country: string | null
           ui_language: string | null
           username: string | null
@@ -265,6 +266,7 @@ export type Database = {
           languages?: string[] | null
           lat?: number | null
           lng?: number | null
+          neighborhood_images?: string[] | null
           origin_country?: string | null
           ui_language?: string | null
           username?: string | null
@@ -279,6 +281,7 @@ export type Database = {
           languages?: string[] | null
           lat?: number | null
           lng?: number | null
+          neighborhood_images?: string[] | null
           origin_country?: string | null
           ui_language?: string | null
           username?: string | null
