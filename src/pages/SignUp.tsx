@@ -18,7 +18,7 @@ const SignUp = () => {
     name: "",
     bio: "",
   });
-  const { signUp, loading } = useAuth();
+  const { signUp, loading, session } = useAuth();
   const { translations } = useLanguage();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -34,7 +34,7 @@ const SignUp = () => {
         bio: formData.bio
       });
       
-      // After successful sign-up, redirect happens in auth context
+      // Redirect is handled in AuthContext
     } catch (error) {
       // Error is handled by the Auth context
       console.error("Signup failed:", error);

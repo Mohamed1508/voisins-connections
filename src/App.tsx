@@ -13,6 +13,7 @@ import ChatPage from "./pages/ChatPage";
 import CommunitySpots from "./pages/CommunitySpots";
 import Groups from "./pages/Groups";
 import Rides from "./pages/Rides";
+import Confirmation from "./pages/Confirmation";
 
 import { Toaster } from "@/components/ui/toaster";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
@@ -48,6 +49,7 @@ function App() {
               <Route path="/" element={<Index />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<SignUp />} />
+              <Route path="/confirmation" element={<Confirmation />} />
 
               <Route
                 path="/dashboard"

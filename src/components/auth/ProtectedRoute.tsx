@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { Navigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Loader } from 'lucide-react';
 
@@ -13,9 +13,12 @@ const ProtectedRoute = ({
   children, 
   redirectTo = '/login' 
 }: ProtectedRouteProps) => {
-  const { user, loading } = useAuth();
+  const { user, loading, session } = useAuth();
+  const location = useLocation();
 
-  if (loading) {
+  // Check if we have a session before showing loading state
+  // This prevents flashing loading screen when session is already available
+  if (loading && !session) {
     return (
       <div className="h-screen w-full flex items-center justify-center">
         <div className="flex flex-col items-center">
@@ -27,7 +30,8 @@ const ProtectedRoute = ({
   }
 
   if (!user) {
-    return <Navigate to={redirectTo} />;
+    // Save the attempted URL for redirecting after login
+    return <Navigate to={redirectTo} state={{ from: location }} replace />;
   }
 
   return <>{children}</>;

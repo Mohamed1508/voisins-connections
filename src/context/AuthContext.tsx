@@ -3,7 +3,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 type AuthContextType = {
   session: Session | null;
@@ -31,6 +31,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const fetchSession = async () => {
@@ -40,6 +41,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         setSession(session);
         setUser(session?.user || null);
+        
+        // If user is authenticated and on login/signup page, redirect to dashboard
+        if (session && (location.pathname === '/login' || location.pathname === '/signup')) {
+          navigate('/dashboard');
+        }
       }
       setLoading(false);
     };
@@ -49,10 +55,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user || null);
+      
+      // If user logs in and is on login/signup page, redirect to dashboard
+      if (session && (location.pathname === '/login' || location.pathname === '/signup')) {
+        navigate('/dashboard');
+      }
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [navigate, location]);
 
   const signUp = async (email: string, password: string, userData: any) => {
     try {
@@ -64,6 +75,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           data: {
             username: userData.name,
           },
+          emailRedirectTo: `${window.location.origin}/dashboard`,
         },
       });
 
@@ -71,9 +83,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       toast({
         title: "Compte créé avec succès",
-        description: "Vous pouvez maintenant vous connecter avec vos identifiants.",
+        description: "Vérifiez votre email pour confirmer votre compte.",
       });
       
+      // Navigate to dashboard even before confirmation
+      // The user will need to verify their email to perform certain actions
+      navigate('/dashboard');
       return;
     } catch (error: any) {
       toast({

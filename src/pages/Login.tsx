@@ -15,7 +15,7 @@ const Login = () => {
     email: "",
     password: "",
   });
-  const { signIn, loading } = useAuth();
+  const { signIn, loading, session } = useAuth();
   const { translations } = useLanguage();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -27,6 +27,7 @@ const Login = () => {
     e.preventDefault();
     try {
       await signIn(formData.email, formData.password);
+      // Redirect is handled in AuthContext
     } catch (error) {
       // Error is handled by the Auth context
       console.error("Login failed:", error);
