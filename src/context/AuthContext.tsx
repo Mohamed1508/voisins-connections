@@ -5,14 +5,28 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate, useLocation } from 'react-router-dom';
 
+type ProfileData = {
+  username?: string;
+  bio?: string;
+  origin_country?: string;
+  avatar_url?: string;
+  neighborhood_images?: string[];
+  languages?: string[];
+  interests?: string[];
+  lat?: number;
+  lng?: number;
+};
+
 type AuthContextType = {
   session: Session | null;
   user: User | null;
   loading: boolean;
-  signUp: (email: string, password: string, userData: any) => Promise<void>;
+  signUp: (email: string, password: string, userData: ProfileData) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
-  updateProfile: (data: any) => Promise<void>;
+  updateProfile: (data: ProfileData) => Promise<void>;
+  uploadProfileImage: (file: File) => Promise<string | null>;
+  uploadNeighborhoodImage: (file: File) => Promise<string | null>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -65,7 +79,69 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => subscription.unsubscribe();
   }, [navigate, location]);
 
-  const signUp = async (email: string, password: string, userData: any) => {
+  const uploadProfileImage = async (file: File): Promise<string | null> => {
+    try {
+      if (!user) throw new Error("Vous devez être connecté pour télécharger une image");
+      
+      // Create a unique filename using user id and timestamp
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+      const filePath = `avatars/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('user-images')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      // Get the public URL
+      const { data } = supabase.storage
+        .from('user-images')
+        .getPublicUrl(filePath);
+
+      return data.publicUrl;
+    } catch (error: any) {
+      toast({
+        title: "Erreur de téléchargement",
+        description: error.message || "Impossible de télécharger l'image",
+        variant: "destructive",
+      });
+      return null;
+    }
+  };
+
+  const uploadNeighborhoodImage = async (file: File): Promise<string | null> => {
+    try {
+      if (!user) throw new Error("Vous devez être connecté pour télécharger une image");
+      
+      // Create a unique filename using user id, 'neighborhood' identifier, and timestamp
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}-neighborhood-${Date.now()}.${fileExt}`;
+      const filePath = `neighborhood/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('user-images')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      // Get the public URL
+      const { data } = supabase.storage
+        .from('user-images')
+        .getPublicUrl(filePath);
+
+      return data.publicUrl;
+    } catch (error: any) {
+      toast({
+        title: "Erreur de téléchargement",
+        description: error.message || "Impossible de télécharger l'image",
+        variant: "destructive",
+      });
+      return null;
+    }
+  };
+
+  const signUp = async (email: string, password: string, userData: ProfileData) => {
     try {
       setLoading(true);
       const { data, error } = await supabase.auth.signUp({
@@ -73,13 +149,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         password,
         options: {
           data: {
-            username: userData.name,
+            username: userData.username,
+            avatar_url: userData.avatar_url,
+            neighborhood_images: userData.neighborhood_images || [],
+            origin_country: userData.origin_country,
           },
-          emailRedirectTo: `${window.location.origin}/dashboard`,
+          emailRedirectTo: `${window.location.origin}/confirmation`,
         },
       });
 
       if (error) throw error;
+      
+      // If signup is successful, insert the user data into the users table
+      if (data.user) {
+        const { error: insertError } = await supabase
+          .from('users')
+          .insert([{
+            id: data.user.id,
+            email: email,
+            username: userData.username,
+            avatar_url: userData.avatar_url,
+            bio: userData.bio,
+            origin_country: userData.origin_country,
+            lat: userData.lat,
+            lng: userData.lng,
+            languages: userData.languages || [],
+            interests: userData.interests || []
+          }]);
+        
+        if (insertError) {
+          console.error("Error creating user profile:", insertError);
+        }
+      }
       
       toast({
         title: "Compte créé avec succès",
@@ -153,17 +254,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const updateProfile = async (data: any) => {
+  const updateProfile = async (data: ProfileData) => {
     try {
       setLoading(true);
       
-      // Si on met à jour le profil complet
-      const { error } = await supabase
+      if (!user) throw new Error("Vous devez être connecté pour mettre à jour votre profil");
+      
+      // Update Supabase Auth metadata
+      const authUpdate = {
+        data: {
+          username: data.username,
+          avatar_url: data.avatar_url,
+          neighborhood_images: data.neighborhood_images,
+          origin_country: data.origin_country,
+        }
+      };
+      
+      const { error: authError } = await supabase.auth.updateUser(authUpdate);
+      if (authError) throw authError;
+      
+      // Update profile in the users table
+      const { error: profileError } = await supabase
         .from('users')
-        .update(data)
-        .eq('id', user?.id);
+        .update({
+          username: data.username,
+          bio: data.bio,
+          avatar_url: data.avatar_url,
+          origin_country: data.origin_country,
+          lat: data.lat,
+          lng: data.lng,
+          languages: data.languages,
+          interests: data.interests,
+        })
+        .eq('id', user.id);
         
-      if (error) throw error;
+      if (profileError) throw profileError;
       
       toast({
         title: "Profil mis à jour",
@@ -188,6 +313,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signIn,
     signOut,
     updateProfile,
+    uploadProfileImage,
+    uploadNeighborhoodImage,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

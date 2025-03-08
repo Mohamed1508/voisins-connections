@@ -2,9 +2,9 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MapPin, MessageCircle, Calendar, ArrowLeft, Edit, Globe, Heart } from "lucide-react";
+import { MapPin, MessageCircle, Calendar, ArrowLeft, Edit, Globe, Heart, Upload, X, Image as ImageIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
@@ -12,6 +12,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/context/LanguageContext";
 import EditProfileModal from "@/components/profile/EditProfileModal";
 import Header from "@/components/layout/Header";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 // Liste des langues et pays pour l'affichage
 const LANGUAGES = {
@@ -45,33 +49,49 @@ const COUNTRIES = {
 const ProfilePage = () => {
   const { userId } = useParams();
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, uploadProfileImage, uploadNeighborhoodImage, updateProfile } = useAuth();
   const { translations } = useLanguage();
   const navigate = useNavigate();
   const [userData, setUserData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isContactButtonLoading, setIsContactButtonLoading] = useState(false);
+  const [isNeighborhoodModalOpen, setIsNeighborhoodModalOpen] = useState(false);
+  const [neighborhoodImages, setNeighborhoodImages] = useState<string[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
   
-  const isOwnProfile = user && userId === user.id;
+  const isOwnProfile = user && (!userId || userId === user.id);
 
   useEffect(() => {
     fetchUserData();
-  }, [userId]);
+  }, [userId, user]);
 
   const fetchUserData = async () => {
     try {
       setLoading(true);
       
+      const fetchId = userId || (user ? user.id : null);
+      if (!fetchId) {
+        setLoading(false);
+        return;
+      }
+      
       const { data, error } = await supabase
         .from('users')
         .select('*')
-        .eq('id', userId)
+        .eq('id', fetchId)
         .single();
         
       if (error) throw error;
       
       setUserData(data);
+      
+      // Check if the user has metadata with neighborhood images
+      if (user && isOwnProfile) {
+        const { data } = await supabase.auth.getUser();
+        const neighborhoodImagesList = data.user?.user_metadata?.neighborhood_images || [];
+        setNeighborhoodImages(neighborhoodImagesList);
+      }
     } catch (error: any) {
       console.error("Error fetching user data:", error);
       toast({
@@ -95,6 +115,104 @@ const ProfilePage = () => {
         variant: "destructive",
       });
       setIsContactButtonLoading(false);
+    }
+  };
+  
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    
+    try {
+      setIsSaving(true);
+      const file = e.target.files[0];
+      const avatarUrl = await uploadProfileImage(file);
+      
+      if (avatarUrl) {
+        await updateProfile({
+          avatar_url: avatarUrl
+        });
+        
+        // Refresh user data
+        fetchUserData();
+        
+        toast({
+          title: "Photo de profil mise à jour",
+          description: "Votre photo de profil a été mise à jour avec succès.",
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: error.message || "Impossible de mettre à jour la photo de profil.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+  
+  const handleAddNeighborhoodImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    
+    try {
+      if (neighborhoodImages.length >= 3) {
+        toast({
+          title: "Limite atteinte",
+          description: "Vous pouvez ajouter un maximum de 3 photos de quartier.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      setIsSaving(true);
+      const file = e.target.files[0];
+      const imageUrl = await uploadNeighborhoodImage(file);
+      
+      if (imageUrl) {
+        const updatedImages = [...neighborhoodImages, imageUrl];
+        setNeighborhoodImages(updatedImages);
+        
+        await updateProfile({
+          neighborhood_images: updatedImages
+        });
+        
+        toast({
+          title: "Photo ajoutée",
+          description: "Votre photo de quartier a été ajoutée avec succès.",
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: error.message || "Impossible d'ajouter la photo de quartier.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+  
+  const handleRemoveNeighborhoodImage = async (index: number) => {
+    try {
+      setIsSaving(true);
+      const updatedImages = neighborhoodImages.filter((_, i) => i !== index);
+      setNeighborhoodImages(updatedImages);
+      
+      await updateProfile({
+        neighborhood_images: updatedImages
+      });
+      
+      toast({
+        title: "Photo supprimée",
+        description: "La photo de quartier a été supprimée avec succès.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: error.message || "Impossible de supprimer la photo de quartier.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -161,10 +279,29 @@ const ProfilePage = () => {
           <CardHeader className="pb-4">
             <div className="flex items-start justify-between">
               <div className="flex items-center space-x-4">
-                <Avatar className="h-16 w-16">
-                  <AvatarImage src={userData.avatar_url} alt={userData.username} />
-                  <AvatarFallback>{userData.username?.slice(0, 2).toUpperCase() || "VP"}</AvatarFallback>
-                </Avatar>
+                <div className="relative">
+                  <Avatar className="h-16 w-16">
+                    <AvatarImage src={userData.avatar_url} alt={userData.username} />
+                    <AvatarFallback>{userData.username?.slice(0, 2).toUpperCase() || "VP"}</AvatarFallback>
+                  </Avatar>
+                  
+                  {isOwnProfile && (
+                    <Label 
+                      htmlFor="avatar-upload" 
+                      className="absolute -bottom-1 -right-1 p-1 bg-primary text-white rounded-full cursor-pointer"
+                    >
+                      <Upload className="h-3 w-3" />
+                      <Input 
+                        id="avatar-upload" 
+                        type="file" 
+                        accept="image/*" 
+                        className="hidden" 
+                        onChange={handleAvatarChange}
+                        disabled={isSaving}
+                      />
+                    </Label>
+                  )}
+                </div>
                 <div>
                   <CardTitle className="text-2xl">{userData.username}</CardTitle>
                   {userData.lat && userData.lng && (
@@ -177,14 +314,24 @@ const ProfilePage = () => {
               </div>
               
               {isOwnProfile && (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => setIsEditModalOpen(true)}
-                >
-                  <Edit className="h-4 w-4 mr-2" />
-                  Modifier
-                </Button>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setIsNeighborhoodModalOpen(true)}
+                  >
+                    <ImageIcon className="h-4 w-4 mr-2" />
+                    Photos
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setIsEditModalOpen(true)}
+                  >
+                    <Edit className="h-4 w-4 mr-2" />
+                    Modifier
+                  </Button>
+                </div>
               )}
             </div>
           </CardHeader>
@@ -235,6 +382,28 @@ const ProfilePage = () => {
               <h3 className="font-semibold mb-2">À propos</h3>
               <p className="text-muted-foreground">{userData.bio || "Aucune information fournie."}</p>
             </div>
+            
+            {/* Neighborhood Images Section */}
+            {neighborhoodImages.length > 0 && (
+              <>
+                <Separator className="my-4" />
+                <div>
+                  <h3 className="font-semibold mb-2">Mon quartier</h3>
+                  <div className="grid grid-cols-3 gap-2">
+                    {neighborhoodImages.map((imageUrl, index) => (
+                      <div key={index} className="relative rounded-md overflow-hidden h-24">
+                        <img 
+                          src={imageUrl} 
+                          alt={`Quartier ${index + 1}`} 
+                          className="w-full h-full object-cover cursor-pointer" 
+                          onClick={() => window.open(imageUrl, '_blank')}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
           </CardContent>
           
           {!isOwnProfile && (
@@ -249,7 +418,7 @@ const ProfilePage = () => {
                 ) : (
                   <>
                     <MessageCircle className="mr-2 h-4 w-4" />
-                    Contacter {userData.username.split(' ')[0]}
+                    Contacter {userData.username?.split(' ')[0] || "cet utilisateur"}
                   </>
                 )}
               </Button>
@@ -267,13 +436,70 @@ const ProfilePage = () => {
             }} 
           />
         )}
+        
+        {/* Neighborhood Images Modal */}
+        <Dialog open={isNeighborhoodModalOpen} onOpenChange={setIsNeighborhoodModalOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Photos de mon quartier</DialogTitle>
+            </DialogHeader>
+            
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-3 gap-2">
+                {neighborhoodImages.map((imageUrl, index) => (
+                  <div key={index} className="relative rounded-md overflow-hidden h-24">
+                    <img 
+                      src={imageUrl} 
+                      alt={`Quartier ${index + 1}`} 
+                      className="w-full h-full object-cover" 
+                    />
+                    <button 
+                      type="button"
+                      onClick={() => handleRemoveNeighborhoodImage(index)}
+                      className="absolute top-1 right-1 bg-black/60 rounded-full p-1 text-white"
+                      disabled={isSaving}
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
+                
+                {neighborhoodImages.length < 3 && (
+                  <div className="h-24 border-2 border-dashed border-muted-foreground/20 rounded-md flex items-center justify-center">
+                    <Label htmlFor="neighborhood-upload" className="cursor-pointer flex flex-col items-center">
+                      <ImageIcon className="h-6 w-6 text-muted-foreground" />
+                      <span className="text-xs text-muted-foreground mt-1">Ajouter</span>
+                    </Label>
+                    <Input 
+                      id="neighborhood-upload" 
+                      type="file" 
+                      accept="image/*" 
+                      className="hidden" 
+                      onChange={handleAddNeighborhoodImage}
+                      disabled={isSaving}
+                    />
+                  </div>
+                )}
+              </div>
+              
+              <p className="text-xs text-muted-foreground">
+                Partagez des photos de votre quartier pour aider vos voisins à le découvrir (max 3 images)
+              </p>
+            </div>
+            
+            <DialogFooter>
+              <Button 
+                onClick={() => setIsNeighborhoodModalOpen(false)} 
+                disabled={isSaving}
+              >
+                Fermer
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </>
   );
-};
-
-const Separator = ({ className }: { className?: string }) => {
-  return <div className={`h-px bg-border ${className || ''}`} />;
 };
 
 export default ProfilePage;

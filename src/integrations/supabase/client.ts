@@ -112,4 +112,8 @@ export const supabase = createClient<ExtendedDatabase>(SUPABASE_URL, SUPABASE_AN
     autoRefreshToken: true,
     detectSessionInUrl: true,
   },
+  storage: {
+    // Improved storage configuration
+    storageKey: 'supabase-storage',
+  },
 });
