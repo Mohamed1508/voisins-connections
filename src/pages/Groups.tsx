@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { useLanguage } from "@/context/LanguageContext";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users, Calendar, MapPin, Clock, ArrowRight, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -114,7 +114,7 @@ const Groups = () => {
     }
   };
 
-  const createGroup = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleCreateGroup = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
     if (!user) return;
@@ -347,7 +347,7 @@ const Groups = () => {
                       <LeafletProvider>
                         <LeafletMap
                           previewMode={true}
-                          userLocation={{ lat: 48.8566, lng: 2.3522 }}
+                          userLocation={{ lat: newGroupLat, lng: newGroupLng }}
                           neighbors={[]}
                           events={[]}
                           withSearchBar={true}
@@ -361,7 +361,21 @@ const Groups = () => {
                 <Button type="button" variant="secondary" onClick={() => setIsCreateModalOpen(false)}>
                   {translations.cancel}
                 </Button>
-                <Button type="submit" onClick={createGroup}>Créer</Button>
+                <Button 
+                  type="submit" 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleCreateGroup(e as unknown as React.FormEvent<HTMLFormElement>);
+                  }}
+                  disabled={isCreating}
+                >
+                  {isCreating ? "Création..." : (
+                    <>
+                      <Users className="mr-2 h-4 w-4" />
+                      Créer le groupe
+                    </>
+                  )}
+                </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
@@ -439,3 +453,4 @@ const Groups = () => {
 };
 
 export default Groups;
+

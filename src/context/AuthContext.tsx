@@ -161,11 +161,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) throw error;
       
-      // If signup is successful, the trigger will automatically create the profile
+      // If signup is successful, the trigger will automatically create an entry in the users table
       // But we'll update it with the additional data
       if (data.user) {
         const { error: updateError } = await supabase
-          .from('profiles')
+          .from('users')
           .update({
             username: userData.username,
             avatar_url: userData.avatar_url,
@@ -275,9 +275,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { error: authError } = await supabase.auth.updateUser(authUpdate);
       if (authError) throw authError;
       
-      // Update profile in the profiles table
+      // Update profile in the users table
       const { error: profileError } = await supabase
-        .from('profiles')
+        .from('users')
         .update({
           username: data.username,
           bio: data.bio,

@@ -8,10 +8,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import { Menu, X, User, MessageCircle, LogOut, MapPin, Users } from "lucide-react";
+import { Menu, X, User, MessageCircle, LogOut, MapPin, Users, Shield } from "lucide-react";
 import Logo from "@/components/ui/Logo";
 import { useAuth } from "@/context/AuthContext";
 import { useLanguage, SupportedLanguage } from "@/context/LanguageContext";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -51,9 +52,17 @@ const Header = () => {
               <Link to="/chat" className="text-foreground hover:text-primary transition-colors">
                 {translations.chats}
               </Link>
-              <Link to={`/profile/${user.id}`} className="text-foreground hover:text-primary transition-colors">
-                {translations.profile}
-              </Link>
+              <div className="flex items-center gap-1">
+                <Link to={`/profile/${user.id}`} className="flex items-center gap-2 hover:text-primary">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={user.user_metadata?.avatar_url} alt={user.user_metadata?.username || user.email} />
+                    <AvatarFallback>{(user.user_metadata?.username || user.email)?.slice(0, 2).toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                  <span className="text-sm">
+                    {translations.welcome}, {user.user_metadata?.username || user.email}!
+                  </span>
+                </Link>
+              </div>
               <Button 
                 variant="ghost"
                 onClick={() => signOut()}
@@ -108,6 +117,18 @@ const Header = () => {
           <nav className="flex flex-col space-y-3">
             {user ? (
               <>
+                <div className="flex items-center gap-2 py-2 border-b border-border pb-3 mb-2">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={user.user_metadata?.avatar_url} alt={user.user_metadata?.username || user.email} />
+                    <AvatarFallback>{(user.user_metadata?.username || user.email)?.slice(0, 2).toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium">{user.user_metadata?.username || user.email}</span>
+                    <Link to={`/profile/${user.id}`} className="text-xs text-primary">
+                      Voir le profil
+                    </Link>
+                  </div>
+                </div>
                 <Link 
                   to="/dashboard" 
                   className="flex items-center gap-2 py-2 hover:text-primary transition-colors"
@@ -141,12 +162,12 @@ const Header = () => {
                   {translations.chats}
                 </Link>
                 <Link 
-                  to={`/profile/${user.id}`} 
+                  to="/privacy" 
                   className="flex items-center gap-2 py-2 hover:text-primary transition-colors"
                   onClick={toggleMenu}
                 >
-                  <User size={18} />
-                  {translations.profile}
+                  <Shield size={18} />
+                  {translations.privacy || "Confidentialité"}
                 </Link>
                 <Button 
                   variant="ghost"

@@ -7,6 +7,7 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const Index = () => {
   const { translations } = useLanguage();
@@ -24,9 +25,32 @@ const Index = () => {
         <div className="container max-w-6xl mx-auto px-4 sm:px-6 relative z-10">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             <div className="fade-in">
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6">
-                {user ? `${translations.welcome}, ${user.user_metadata?.username || user.email}!` : translations.welcome} <span className="text-primary">{translations.neighbors}</span>
-              </h1>
+              {user ? (
+                <div className="mb-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Avatar className="h-12 w-12">
+                      <AvatarImage src={user.user_metadata?.avatar_url} alt={user.user_metadata?.username || user.email} />
+                      <AvatarFallback>{(user.user_metadata?.username || user.email)?.slice(0, 2).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight">
+                        {translations.welcome}, <span className="text-primary">{user.user_metadata?.username || user.email}</span>
+                      </h1>
+                    </div>
+                  </div>
+                  {user.user_metadata?.neighborhood_images && user.user_metadata.neighborhood_images.length > 0 && (
+                    <div className="grid grid-cols-3 gap-2 mb-4">
+                      {user.user_metadata.neighborhood_images.map((img: string, idx: number) => (
+                        <img key={idx} src={img} alt="Neighborhood" className="rounded-md h-24 w-full object-cover" />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6">
+                  {translations.welcome} <span className="text-primary">{translations.neighbors}</span>
+                </h1>
+              )}
               <p className="text-lg md:text-xl text-muted-foreground mb-8">
                 {translations.discover}
               </p>
