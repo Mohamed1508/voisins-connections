@@ -26,6 +26,8 @@ const Header = () => {
     setLanguage(newLang);
   };
 
+  console.log("Header render, user:", user?.email);
+
   return (
     <header className="bg-background w-full border-b shadow-sm">
       <div className="container mx-auto px-4 py-3 sm:px-6 flex items-center justify-between">

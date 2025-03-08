@@ -6,9 +6,13 @@ import { UserPlus, MessageCircle, Map as MapIcon, Users, Car } from "lucide-reac
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { useLanguage } from "@/context/LanguageContext";
+import { useAuth } from "@/context/AuthContext";
 
 const Index = () => {
   const { translations } = useLanguage();
+  const { user } = useAuth();
+
+  console.log("Index page render, user:", user?.email);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -21,24 +25,40 @@ const Index = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             <div className="fade-in">
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6">
-                {translations.welcome} <span className="text-primary">{translations.neighbors}</span>
+                {user ? `${translations.welcome}, ${user.user_metadata?.username || user.email}!` : translations.welcome} <span className="text-primary">{translations.neighbors}</span>
               </h1>
               <p className="text-lg md:text-xl text-muted-foreground mb-8">
                 {translations.discover}
               </p>
-              <div className="flex flex-wrap gap-4">
-                <Button size="lg" asChild>
-                  <Link to="/signup">
-                    <UserPlus className="mr-2 h-5 w-5" />
-                    {translations.signUp}
-                  </Link>
-                </Button>
-                <Button size="lg" variant="outline" asChild>
-                  <Link to="/login">
-                    {translations.login}
-                  </Link>
-                </Button>
-              </div>
+              {!user ? (
+                <div className="flex flex-wrap gap-4">
+                  <Button size="lg" asChild>
+                    <Link to="/signup">
+                      <UserPlus className="mr-2 h-5 w-5" />
+                      {translations.signUp}
+                    </Link>
+                  </Button>
+                  <Button size="lg" variant="outline" asChild>
+                    <Link to="/login">
+                      {translations.login}
+                    </Link>
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex flex-wrap gap-4">
+                  <Button size="lg" asChild>
+                    <Link to="/dashboard">
+                      <MapIcon className="mr-2 h-5 w-5" />
+                      {translations.dashboard}
+                    </Link>
+                  </Button>
+                  <Button size="lg" variant="outline" asChild>
+                    <Link to={`/profile/${user.id}`}>
+                      {translations.profile}
+                    </Link>
+                  </Button>
+                </div>
+              )}
             </div>
             <div className="rounded-xl overflow-hidden shadow-xl h-[400px]">
               <MapView

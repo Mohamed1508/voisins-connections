@@ -67,6 +67,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     fetchSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      console.log("Auth state changed:", _event, session?.user?.email);
       setSession(session);
       setUser(session?.user || null);
       
@@ -160,13 +161,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) throw error;
       
-      // If signup is successful, insert the user data into the users table
+      // If signup is successful, the trigger will automatically create the profile
+      // But we'll update it with the additional data
       if (data.user) {
-        const { error: insertError } = await supabase
-          .from('users')
-          .insert([{
-            id: data.user.id,
-            email: email,
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({
             username: userData.username,
             avatar_url: userData.avatar_url,
             bio: userData.bio,
@@ -174,11 +174,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             lat: userData.lat,
             lng: userData.lng,
             languages: userData.languages || [],
-            interests: userData.interests || []
-          }]);
+            interests: userData.interests || [],
+            neighborhood_images: userData.neighborhood_images || []
+          })
+          .eq('id', data.user.id);
         
-        if (insertError) {
-          console.error("Error creating user profile:", insertError);
+        if (updateError) {
+          console.error("Error updating user profile:", updateError);
         }
       }
       
@@ -273,9 +275,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { error: authError } = await supabase.auth.updateUser(authUpdate);
       if (authError) throw authError;
       
-      // Update profile in the users table
+      // Update profile in the profiles table
       const { error: profileError } = await supabase
-        .from('users')
+        .from('profiles')
         .update({
           username: data.username,
           bio: data.bio,
@@ -285,6 +287,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           lng: data.lng,
           languages: data.languages,
           interests: data.interests,
+          neighborhood_images: data.neighborhood_images,
         })
         .eq('id', user.id);
         
